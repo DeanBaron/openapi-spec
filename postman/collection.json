@@ -5,7 +5,7 @@
             "description": "Endpoints for authentication (login, token validation, etc.)",
             "item": [
                 {
-                    "id": "7a17ad5e-987e-41ee-b94b-95ad6f740d3d",
+                    "id": "d32c6b38-ddd6-4df0-b4d5-e65897eb17d6",
                     "name": "Authenticates a client and returns a JWT token",
                     "request": {
                         "name": "Authenticates a client and returns a JWT token",
@@ -46,7 +46,7 @@
                     },
                     "response": [
                         {
-                            "id": "765df03f-6636-4a85-9bee-6e67b2d26080",
+                            "id": "c93a6dc2-d1d7-4938-90bc-c31eab550b2e",
                             "name": "Successful authentication",
                             "originalRequest": {
                                 "url": {
@@ -103,7 +103,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "7285b560-0e32-4926-97c4-8986a5c44bd9",
+                            "id": "f0a45951-2fd8-4c9f-b6fc-1774446e9ef1",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -160,7 +160,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "8a43e1d9-6f5a-4943-a80a-b1741f0cf408",
+                            "id": "9f1c774e-0c2d-41dd-9716-f8d6da276a30",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -223,7 +223,7 @@
                     }
                 },
                 {
-                    "id": "ab0eb765-ec07-4da6-aa32-c5474ee00ae5",
+                    "id": "08e2e88d-5ae3-435d-a73a-16426f72c99f",
                     "name": "Returns client details for an authenticated client",
                     "request": {
                         "name": "Returns client details for an authenticated client",
@@ -259,7 +259,7 @@
                     },
                     "response": [
                         {
-                            "id": "ca9926fd-d8be-492e-a52a-682cda56721e",
+                            "id": "aa02ec9a-e23d-4e03-981a-6cffa24a4d2f",
                             "name": "Client details retrieved successfully",
                             "originalRequest": {
                                 "url": {
@@ -303,7 +303,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "0baae35f-c26a-48a4-b28f-f1855e905eba",
+                            "id": "a8800129-708f-4737-8266-3ddd68318635",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -359,7 +359,7 @@
             "description": "Endpoints for managing and retrieving cluster data",
             "item": [
                 {
-                    "id": "d9a5fc7f-a784-42c2-9756-10913c68f9b8",
+                    "id": "aded4a80-3700-4108-aac7-6fae4d70ce9f",
                     "name": "Retrieves a list of all namespaces within a specific Kubernetes cluster for a given client.",
                     "request": {
                         "name": "Retrieves a list of all namespaces within a specific Kubernetes cluster for a given client.",
@@ -422,7 +422,7 @@
                     },
                     "response": [
                         {
-                            "id": "1fad8d07-790f-441a-b8dd-3590c91a34d4",
+                            "id": "7abfede2-adf4-48f8-b0db-3643b5e73ead",
                             "name": "A list of namespaces within a cluster.",
                             "originalRequest": {
                                 "url": {
@@ -469,7 +469,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "03e096e5-8a20-45fe-b6dd-35c998a4f1d8",
+                            "id": "91259e54-df01-4da0-90e6-c350a914e97e",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -516,7 +516,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "b3fcbe91-6ea8-449f-a5f4-9958deb403aa",
+                            "id": "14234769-0b55-4b3d-bc74-04b576c4bfd6",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -563,7 +563,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "08b8b68d-facf-4b94-94d7-19cbc3a2f63e",
+                            "id": "8cba0a57-3c84-4c8e-9a5b-c03aec486248",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -616,7 +616,7 @@
                     }
                 },
                 {
-                    "id": "61859647-2692-45d8-8823-e98da87cefff",
+                    "id": "425f1deb-dbcc-4ed0-9a7f-380b4431bd6a",
                     "name": "Retrieves all clusters for a specific client.",
                     "request": {
                         "name": "Retrieves all clusters for a specific client.",
@@ -667,7 +667,7 @@
                     },
                     "response": [
                         {
-                            "id": "b8e14c7c-f23a-4bc8-a939-3270ade5a8be",
+                            "id": "d010ae0a-0d6c-40a7-88f7-453daf80fdbe",
                             "name": "A list of clusters",
                             "originalRequest": {
                                 "url": {
@@ -712,7 +712,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "9484785c-06f9-4449-a553-ede62a515de9",
+                            "id": "c8e5cfcd-1ad7-440b-a169-8bcecde610d9",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -757,7 +757,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "20be6193-2bc3-4186-9584-c626cfce112b",
+                            "id": "7f469384-99b5-4030-90b4-6015d76c36c0",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -802,7 +802,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "9abec01c-865a-4ee8-83b0-b8e93ad0c443",
+                            "id": "2222262d-be16-4fbc-a43f-f0a98740bcef",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -859,7 +859,7 @@
             "description": "Endpoints to handle internal applications.",
             "item": [
                 {
-                    "id": "0b361fd7-10a8-490b-96c5-58a03be0f255",
+                    "id": "21723402-c7c3-4137-a130-a2b96addb35f",
                     "name": "Retrieves deprecation status of external applications across all clusters for a specific client.",
                     "request": {
                         "name": "Retrieves deprecation status of external applications across all clusters for a specific client.",
@@ -959,7 +959,7 @@
                     },
                     "response": [
                         {
-                            "id": "26a48ab3-a272-4041-9803-8aba84e90612",
+                            "id": "4903e052-aa58-412e-8519-c27fc37a74e3",
                             "name": "A list of external applications with their deprecation status.",
                             "originalRequest": {
                                 "url": {
@@ -1034,7 +1034,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "ea7f161c-3307-4a71-a10c-4e0f2c45427f",
+                            "id": "ffc07bc2-a50f-4633-b8d5-2a87d0589654",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -1109,7 +1109,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "fe80ee86-ae86-41fe-95ba-219d9e8b0c98",
+                            "id": "5eb0d806-4953-483a-910e-6af03fcedcc2",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -1184,7 +1184,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "574744f3-2f60-4528-9286-bf00b61ac200",
+                            "id": "a6671491-2803-40af-845f-a15122b0c1c9",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -1259,7 +1259,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "383d6c4c-eba2-4b31-9764-8178f0b6ba48",
+                            "id": "d90ea1ac-36e2-4012-810e-59fb8082253f",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -1340,7 +1340,7 @@
                     }
                 },
                 {
-                    "id": "81503a55-6414-4700-8f1a-f6e859b7a3aa",
+                    "id": "d9ff9ca9-b31a-4953-8d76-485de37a1839",
                     "name": "Retrieves a list of all internal applications installed on a specified Kubernetes cluster. Allows filtering by namespace.",
                     "request": {
                         "name": "Retrieves a list of all internal applications installed on a specified Kubernetes cluster. Allows filtering by namespace.",
@@ -1432,7 +1432,7 @@
                     },
                     "response": [
                         {
-                            "id": "cc4956f0-604f-4df7-8e76-7955ed8c9935",
+                            "id": "4c4abd94-de84-41c2-baa2-49207c7b794d",
                             "name": "A list of internal applications.",
                             "originalRequest": {
                                 "url": {
@@ -1498,7 +1498,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "851e3d9a-5143-4255-a524-a187fdbde101",
+                            "id": "0414f852-31cf-495d-bd91-beec0635c21d",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -1564,7 +1564,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "cd8a5cab-0d3d-493b-a82b-28cedecf7ec6",
+                            "id": "10ca3991-8bbb-457b-bc3b-ddf63b7c46e9",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -1630,7 +1630,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "c37a34d7-a348-4d8a-bba3-16dc2b90d938",
+                            "id": "64d6f413-644b-489c-9e05-f5aa6fd580e0",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -1696,7 +1696,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "3293c59e-7801-44c9-bc36-2644e9796691",
+                            "id": "b29e0390-e194-4ae8-b955-fb3aac2d8c0a",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -1768,7 +1768,7 @@
                     }
                 },
                 {
-                    "id": "321bbcfe-18d8-438c-8607-42e9fa6c8804",
+                    "id": "ea590634-9e72-4444-952a-09e92b34f80b",
                     "name": "Creates a new internal application entry.",
                     "request": {
                         "name": "Creates a new internal application entry.",
@@ -1833,7 +1833,7 @@
                     },
                     "response": [
                         {
-                            "id": "99eb3ffa-744e-4566-a6ca-c895c1d48a06",
+                            "id": "53bf1d09-1e85-4146-bde1-303e10862c20",
                             "name": "Internal Application created successfully.",
                             "originalRequest": {
                                 "url": {
@@ -1893,7 +1893,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "ac9fbb24-43f3-449f-90f6-ae3eccf9e0b9",
+                            "id": "1af12ca2-e190-4d61-939b-6c8237a1aee3",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -1953,7 +1953,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "58b4bfeb-cb95-4280-bd09-96c677d8aff3",
+                            "id": "7b8d9831-702b-4376-af56-941288b15682",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -2013,7 +2013,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "0f0bcc9d-4087-4d2b-b1b7-c81434f4b934",
+                            "id": "0a37f0b8-94c7-42da-8a73-71747ebe40fb",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -2073,7 +2073,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "39c834ec-520b-4836-81a9-d40aa7bc4fa7",
+                            "id": "ac57a28e-12e1-4e20-9a71-f4cd34bd6791",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -2139,7 +2139,7 @@
                     }
                 },
                 {
-                    "id": "44c37919-fc75-426b-b306-42e459af5917",
+                    "id": "a92b175d-ef76-4e29-8a8b-16e7da2c5967",
                     "name": "Creates a new version of an internal application.",
                     "request": {
                         "name": "Creates a new version of an internal application.",
@@ -2219,7 +2219,7 @@
                     },
                     "response": [
                         {
-                            "id": "d1569f79-cbe3-438a-bef0-5783833fc244",
+                            "id": "e44b2670-80a1-4f0a-b99b-01870401f0cb",
                             "name": "Internal Application Version created successfully.",
                             "originalRequest": {
                                 "url": {
@@ -2281,7 +2281,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "bf253572-8337-459a-929f-d003c12165c2",
+                            "id": "a3ff1407-6546-46e7-a937-31960b16fef7",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -2343,7 +2343,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "a68d39ee-e09c-46d1-a850-0e43459071bd",
+                            "id": "bb3cf594-f5df-4bd3-afe2-d2e7788a8b6e",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -2405,7 +2405,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "7f97cb3b-8ae9-4e3a-bebb-7dbcc78e0603",
+                            "id": "7ba17586-1e19-496a-8e45-c70b41bb7d01",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -2467,7 +2467,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "7c0eec41-1e1b-4952-a7d9-b59a32b9429b",
+                            "id": "587260bc-d447-470c-ae1b-8103199ec6cd",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -2541,7 +2541,7 @@
             "description": "Endpoints to handle external applications.",
             "item": [
                 {
-                    "id": "fa6d3c96-f6f5-4ad8-8519-d51f23ae1c09",
+                    "id": "011e3268-78c5-4711-bad5-1aef43197fbd",
                     "name": "Retrieves information about a specific external application.",
                     "request": {
                         "name": "Retrieves information about a specific external application.",
@@ -2583,7 +2583,7 @@
                     },
                     "response": [
                         {
-                            "id": "29e8c81b-6b6c-43ac-ae26-ef672acb52fd",
+                            "id": "6827a87a-c1b6-4100-9685-3a4ab40652d1",
                             "name": "Successful operation",
                             "originalRequest": {
                                 "url": {
@@ -2627,7 +2627,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "ba042b63-4b29-40ee-bd3b-e7d07ec3a908",
+                            "id": "8be556f4-a202-406a-ab67-5a044a762b68",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -2671,7 +2671,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "58e473f4-73b5-4cef-a7f6-3cc6673fff6a",
+                            "id": "546a637e-4dd2-4f8f-bb7d-7a325b68fef1",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -2715,7 +2715,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "e9157ce1-9cfe-4424-b951-84db23a4fc1a",
+                            "id": "e8865a26-1f86-4f3f-a44d-06fbda41c269",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -2759,7 +2759,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "a786e842-3b4c-4d8e-9099-c6c9e32f6686",
+                            "id": "528a9c24-df4a-4847-a5aa-a5db5c4a344a",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -2809,7 +2809,7 @@
                     }
                 },
                 {
-                    "id": "61135133-3907-413e-95d2-510d708adcc8",
+                    "id": "23a4dcc8-cc85-4b2f-89b5-65ef086ab37f",
                     "name": "Retrieves all available versions for a specific external application.",
                     "request": {
                         "name": "Retrieves all available versions for a specific external application.",
@@ -2852,7 +2852,7 @@
                     },
                     "response": [
                         {
-                            "id": "7da3e92c-affa-4b61-8dbe-acead3553668",
+                            "id": "2693ffd0-30ae-4aca-b5f0-fb5a51d6a5b2",
                             "name": "Successful operation",
                             "originalRequest": {
                                 "url": {
@@ -2897,7 +2897,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "c72f4b42-98a0-49d4-8b66-cc15df4df913",
+                            "id": "ec19d49d-5a3a-46db-afa9-94ab4a55a404",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -2942,7 +2942,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "5fbb71a5-e24b-437e-b1a3-00eb352bc998",
+                            "id": "f401c24c-d9ce-450c-9d75-8efe321b6870",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -2987,7 +2987,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "ef38ac4d-ff7d-46c1-9df9-077c8ca19de7",
+                            "id": "e8949fd1-d318-4b19-b4ee-93597241edf1",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -3032,7 +3032,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "f84a101b-7530-47a3-8dca-27ba33a5a896",
+                            "id": "31a3ed5a-13a3-4c8d-9575-9802bdcbfcdf",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -3083,7 +3083,7 @@
                     }
                 },
                 {
-                    "id": "cb5a9231-126d-4994-9a42-022cce4d57b0",
+                    "id": "204498c2-fe50-4ad1-9b9f-bd77f3b1926b",
                     "name": "Creates a new version entry for a specific external application.",
                     "request": {
                         "name": "Creates a new version entry for a specific external application.",
@@ -3139,7 +3139,7 @@
                     },
                     "response": [
                         {
-                            "id": "9eabed82-e201-40e1-aae4-892157d2202d",
+                            "id": "aacb8c82-c2ff-4530-91d3-d3043c8ab798",
                             "name": "Internal Application Version created successfully.",
                             "originalRequest": {
                                 "url": {
@@ -3197,7 +3197,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "b23fcddc-5e7f-4419-9734-c0d60a9ca78c",
+                            "id": "9e2e380e-5db2-4c7a-902d-0f135026eaed",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -3255,7 +3255,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "c2c2c68e-763e-4ac8-be42-79ee06727995",
+                            "id": "baba2dbe-0fd7-4019-9bfb-dcb7ead67281",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -3313,7 +3313,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "d14d9f7e-c1ca-4528-905e-db0c0d8641d1",
+                            "id": "652f33eb-0cf1-48a2-8b51-cddf84372ec8",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -3371,7 +3371,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "6c86e042-d731-437d-af27-92459d6fc68b",
+                            "id": "8b248df0-326b-41c7-86cc-9bab7051d7f6",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -3435,7 +3435,7 @@
                     }
                 },
                 {
-                    "id": "5ccacdd9-9eb4-41ac-a3e3-c19c5bbe1c4d",
+                    "id": "569879d4-2a67-4abc-bb91-97ecddb05772",
                     "name": "Retrieves the changelog of an external application, optionally comparing two specific versions.",
                     "request": {
                         "name": "Retrieves the changelog of an external application, optionally comparing two specific versions.",
@@ -3500,7 +3500,7 @@
                     },
                     "response": [
                         {
-                            "id": "d35a8b56-6a9e-4e16-9c20-c5ef4507caae",
+                            "id": "78fdf9b0-b1c0-4be5-802f-4f6862074aa5",
                             "name": "OK",
                             "originalRequest": {
                                 "url": {
@@ -3557,7 +3557,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "cccad5fc-de5b-45df-b184-6c1c2b4d16ea",
+                            "id": "edb04bac-1779-438e-989b-cca319e9c678",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -3614,7 +3614,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "3a2f6c94-976b-4738-beff-da40b7756169",
+                            "id": "88adfa20-7088-43ea-a8c6-f2e5e02811bf",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -3671,7 +3671,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "f02e1bba-0394-408d-9806-49787b39be92",
+                            "id": "3945b4f5-9ee4-472a-85c8-8915720ec08b",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -3728,7 +3728,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "195b95a7-c87c-4af9-a769-d1135571fb2c",
+                            "id": "d611e5c8-4d65-4fa6-9439-c5ed4cb5e5de",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -3791,7 +3791,7 @@
                     }
                 },
                 {
-                    "id": "70342d7e-f8aa-4166-8120-cb2fecff1394",
+                    "id": "ecac5009-fb72-46ef-9140-9198eba655cd",
                     "name": "Retrieves the default helm values for a specific version of an external application.",
                     "request": {
                         "name": "Retrieves the default helm values for a specific version of an external application.",
@@ -3846,7 +3846,7 @@
                     },
                     "response": [
                         {
-                            "id": "150c7165-c51a-4fe3-846d-52a73cb9e57b",
+                            "id": "fec16e16-e3ad-40f4-8d6c-8389fed2d27b",
                             "name": "OK",
                             "originalRequest": {
                                 "url": {
@@ -3893,7 +3893,7 @@
                             "_postman_previewlanguage": "text"
                         },
                         {
-                            "id": "3aee88e0-10c7-4129-876a-672b7a78e205",
+                            "id": "cd1c4a85-757f-4c3d-93ce-d9ce245bc936",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -3940,7 +3940,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "8dfc3419-14a3-4681-a509-530864a2536f",
+                            "id": "cf0a0e64-8302-4e35-9c72-db7ddf49620e",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -3987,7 +3987,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "51b48130-ce5c-4baf-add1-71743c535ce4",
+                            "id": "9a61fc6e-f37b-452c-8df2-f699f156710d",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -4034,7 +4034,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "e5ae5069-02c5-4d9a-b4b9-209f2febefcb",
+                            "id": "a4c3b7aa-af68-4ed1-b036-5e2210d49b12",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -4087,7 +4087,7 @@
                     }
                 },
                 {
-                    "id": "289270a9-0a46-49eb-a1db-2d80c082a7cc",
+                    "id": "9e606ce8-e39d-4d1c-a924-aa5187a21241",
                     "name": "Retrieves the default helm values for a specific version of an external application, in a dot notation format.",
                     "request": {
                         "name": "Retrieves the default helm values for a specific version of an external application, in a dot notation format.",
@@ -4143,7 +4143,7 @@
                     },
                     "response": [
                         {
-                            "id": "97704d30-e00c-4208-a9f8-4e530f797195",
+                            "id": "c05f7cea-c606-42a2-a1c7-c2cb711164c7",
                             "name": "OK",
                             "originalRequest": {
                                 "url": {
@@ -4191,7 +4191,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "f1e84056-7c73-4979-8836-ee9b26055135",
+                            "id": "b9cd1ebe-8cfa-42a5-a720-b7d928516a1b",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -4239,7 +4239,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "62f5eda9-b10e-4162-b12d-eeac56564687",
+                            "id": "b8ffbeb1-351e-45e4-a828-8170c823f9aa",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -4287,7 +4287,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "27dc68bb-45d7-401c-8d4b-629cdd41e2fb",
+                            "id": "4b42904e-7f41-4e57-b8ad-451d344e7f64",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -4335,7 +4335,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "618c56e6-6001-4145-99a4-7f9dad114e66",
+                            "id": "3443e3ca-c94a-4b3b-82f3-b20338f2dc89",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -4389,7 +4389,7 @@
                     }
                 },
                 {
-                    "id": "ce0dc673-51da-4a99-ae19-b0f973ee618c",
+                    "id": "340470cf-c832-4cc0-a02e-f0cfe880ef8b",
                     "name": "Retrieves Helm templates for a specific version of an external application.",
                     "request": {
                         "name": "Retrieves Helm templates for a specific version of an external application.",
@@ -4444,7 +4444,7 @@
                     },
                     "response": [
                         {
-                            "id": "b58d262c-1c19-455a-9d87-9d1469b56871",
+                            "id": "f5acf855-54c4-45ce-9360-146791c57216",
                             "name": "OK",
                             "originalRequest": {
                                 "url": {
@@ -4491,7 +4491,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "acab410d-466b-405f-9f51-9e15fb0b2b59",
+                            "id": "30d46e8e-e9a1-45f5-ad0d-8ae340fa609b",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -4538,7 +4538,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "d1f9044c-67a8-49d9-a5da-1f782cdf09eb",
+                            "id": "b79bc3ef-43ac-4aca-badd-38bb7e7f9f32",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -4585,7 +4585,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "55aef208-0271-44cf-8e94-a15385a85811",
+                            "id": "03ee93fb-7de4-461f-86e6-ec9fd03ae27c",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -4632,7 +4632,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "9e59ac7e-72a9-4092-b42f-016c12c9d08c",
+                            "id": "45662334-fe1d-4df6-ab91-73a38e5264a2",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -4685,7 +4685,7 @@
                     }
                 },
                 {
-                    "id": "66d8b180-593c-453c-8530-77cfbee2ea8f",
+                    "id": "54097cc8-5c21-47ec-af01-ff8165794d78",
                     "name": "Retrieves a list of all external applications installed on a specified Kubernetes cluster.",
                     "request": {
                         "name": "Retrieves a list of all external applications installed on a specified Kubernetes cluster.",
@@ -4740,7 +4740,7 @@
                     },
                     "response": [
                         {
-                            "id": "01796bf4-2708-4b65-a8db-bc27cb8dd2db",
+                            "id": "91df0235-37ec-4899-9346-6fe06278d741",
                             "name": "A list of external applications.",
                             "originalRequest": {
                                 "url": {
@@ -4787,7 +4787,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "9e27e612-2e7f-4100-9f53-ef7f74b10d4d",
+                            "id": "aa23e845-9f7d-4423-93d0-acf04701786c",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -4834,7 +4834,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "be17f3e0-b2d5-49b8-99b9-36ea3c67f772",
+                            "id": "2680ce83-b286-4c02-9bde-01b38057fe3b",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -4881,7 +4881,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "183df9ef-df1b-47c2-b7ab-b0edb3a3eb96",
+                            "id": "f3b64a92-fabf-45c7-9948-80302808e93f",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -4928,7 +4928,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "6db60641-de08-4f97-bcf9-8a93970138ee",
+                            "id": "30bc5245-393b-4c64-9402-6627350f571f",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -4981,7 +4981,7 @@
                     }
                 },
                 {
-                    "id": "e16b6482-c5f8-4bac-b4cd-69094f9a9bea",
+                    "id": "7ee3e813-1e54-48e0-ac34-4beb573214f3",
                     "name": "Retrieves a list of all external applications.",
                     "request": {
                         "name": "Retrieves a list of all external applications.",
@@ -5011,7 +5011,7 @@
                     },
                     "response": [
                         {
-                            "id": "ef1bae9d-1b6b-4f61-9c1e-b1e9794942ed",
+                            "id": "965324ce-7adc-451b-89e3-bf7ce487feb8",
                             "name": "A list of all external applications in the system.",
                             "originalRequest": {
                                 "url": {
@@ -5054,7 +5054,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "78a8f0ad-aa14-4291-a0c4-75a60e84b1e8",
+                            "id": "0ecddd6c-e4dc-4930-8db5-2e0e24769109",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -5097,7 +5097,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "0833c9de-e8a2-43f4-b007-bb846f53a877",
+                            "id": "0ccaace8-0de4-4121-bec4-0877883fbe7d",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -5140,7 +5140,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "9ba102bc-4314-43a4-8ac3-60fce7e7b024",
+                            "id": "92b3d9b3-a358-4fa4-8ded-ec866d31f637",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -5183,7 +5183,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "74d41f69-4d29-461d-a92f-303b94f5bb21",
+                            "id": "b8ad90a9-a7fb-4510-b07f-688c14800e76",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -5232,7 +5232,7 @@
                     }
                 },
                 {
-                    "id": "c9ba468d-97ce-4d00-a9b1-3fb64d20f7f1",
+                    "id": "8db39eb4-56e2-4856-9563-46c34c89fda7",
                     "name": "Creates a new external application entry.",
                     "request": {
                         "name": "Creates a new external application entry.",
@@ -5272,7 +5272,7 @@
                     },
                     "response": [
                         {
-                            "id": "9117e107-f2fd-4a9c-a078-011cc8835ff0",
+                            "id": "2210f63d-13c9-4b37-b22b-da2de89fe6cb",
                             "name": "Internal Application Version created successfully.",
                             "originalRequest": {
                                 "url": {
@@ -5328,7 +5328,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "48b43b84-7ebe-4144-91b1-17412d6ac773",
+                            "id": "93a27da1-74d0-4b19-940a-5e1982a8e67a",
                             "name": "Bad Request / Validation Error",
                             "originalRequest": {
                                 "url": {
@@ -5384,7 +5384,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "c551c9cf-3391-45d8-ac75-a0205adc03a0",
+                            "id": "120b3ce3-87f4-487c-9402-064eec91f14e",
                             "name": "Unauthorized / Invalid or missing credentials",
                             "originalRequest": {
                                 "url": {
@@ -5440,7 +5440,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "d65c66ba-a07b-46be-9a3d-3020e62e2897",
+                            "id": "447e7f30-c5c4-4179-920f-5fe61a596662",
                             "name": "Resource not found",
                             "originalRequest": {
                                 "url": {
@@ -5496,7 +5496,7 @@
                             "_postman_previewlanguage": "json"
                         },
                         {
-                            "id": "a298ceaf-3322-405b-9a05-b09d9ed887df",
+                            "id": "93ee8bf8-1ea2-457e-a0e3-9bc5af0c6f8f",
                             "name": "Internal server error",
                             "originalRequest": {
                                 "url": {
@@ -5582,7 +5582,7 @@
         }
     ],
     "info": {
-        "_postman_id": "87ac954d-5cff-4232-9c40-80b300629d45",
+        "_postman_id": "018e530b-4649-4f34-8af9-bdac64796112",
         "name": "Kubernetes Dependency Management API",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {
