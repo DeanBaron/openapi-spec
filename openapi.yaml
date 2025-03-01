@@ -1,0 +1,1546 @@
+---
+openapi: 3.0.0
+info:
+  title: Kubernetes Dependency Management API
+  version: 1.0.0
+  description: API documentation for Kubernetes Dependency Management
+  contact:
+    name: Your Name
+    email: your.email@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+- url: https://localhost:{port}/api/v1
+  description: Local Development Server
+  variables:
+    port:
+      default: '3000'
+      description: Local port number
+tags:
+- name: Auth
+  description: Endpoints for authentication (login, token validation, etc.)
+- name: Clusters
+  description: Endpoints for managing and retrieving cluster data
+- name: Internal Applications
+  description: Endpoints to handle internal applications.
+- name: External Applications
+  description: Endpoints to handle external applications.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    StandardErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Validation Error
+        details:
+          type: string
+          example: Missing or invalid fields.
+    AuthLoginBody:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: testuser@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+    Client:
+      type: object
+      required:
+      - id
+      - name
+      - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    Cluster:
+      type: object
+      required:
+      - id
+      - client_id
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        region:
+          type: string
+        version:
+          type: string
+        deployment_type:
+          type: string
+    Namespace:
+      type: object
+      required:
+      - id
+      - name
+      - cluster_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        cluster_id:
+          type: string
+          format: uuid
+    ExternalApplication:
+      type: object
+      required:
+      - id
+      - name
+      - latest_version
+      - git_url
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: A unique identifier for each application.
+        name:
+          type: string
+          description: The name of the application.
+        latest_version:
+          type: string
+          description: The latest available version for this application.
+        git_url:
+          type: string
+          format: uri
+          description: The SSH URL of the git repository containing the External Application.
+        git_chart_path:
+          type: string
+          nullable: true
+          description: The relative path from the root of the repository to the specific directory containing the Helm chart.
+        git_changelog_path:
+          type: string
+          nullable: true
+          description: The path to the changelog file inside the git repository hosting this application.
+        helm_repository_url:
+          type: string
+          format: uri
+          nullable: true
+          description: The URL to the helm repository containing the application's helm chart.
+        helm_package_name:
+          type: string
+          nullable: true
+          description: The actual name of the package that exists in helm_repository_url and represents this application.
+        artifacthub_repository_name:
+          type: string
+          nullable: true
+          description: The name of the repository containing the artifact hub package.
+        artifacthub_package_name:
+          type: string
+          nullable: true
+          description: The name of the artifact hub package.
+        eol_date:
+          type: string
+          format: date
+          nullable: true
+          description: Defines the date in which the application will be on end of life.
+        eos_days:
+          type: integer
+          nullable: true
+          description: Defines the amount of days from release date until a version of this application is deprecated.
+        eos_count:
+          type: integer
+          nullable: true
+          description: Defines the amount of new versions that are released until a version is considered deprecated.
+        maintainers:
+          type: array
+          items:
+            type: string
+          description: Names of the maintainers of this application.
+        dependencies:
+          type: array
+          items:
+            type: string
+          description: Applications that need to be deployed in order for this application to be deployed.
+        icon_url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL that contains the logo of the application.
+    ExternalApplicationVersion:
+      type: object
+      required:
+      - id
+      - external_application_id
+      - label
+      - changes
+      - release_date
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_application_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        changes:
+          type: string
+        release_date:
+          type: string
+          format: date
+    InternalApplication:
+      type: object
+      required:
+      - id
+      - namespace_id
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        namespace_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        version:
+          type: string
+          nullable: true
+        external_application_id:
+          type: string
+          format: uuid
+          nullable: true
+    InternalApplicationVersion:
+      type: object
+      required:
+      - id
+      - internal_application_id
+      - label
+      properties:
+        id:
+          type: string
+          format: uuid
+        internal_application_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+    Subscription:
+      type: object
+      required:
+      - id
+      - client_id
+      - plan_name
+      - start_date
+      - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        plan_name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+          - canceled
+  parameters:
+    ClientId:
+      name: client_id
+      in: path
+      required: true
+      description: Unique identifier for the client
+      schema:
+        type: string
+        format: uuid
+    ClusterId:
+      name: cluster_id
+      in: path
+      required: true
+      description: Unique identifier for the cluster
+      schema:
+        type: string
+        format: uuid
+    InternalApplicationId:
+      name: internal_application_id
+      in: path
+      required: true
+      description: Unique identifier for the internal application
+      schema:
+        type: string
+        format: uuid
+    ExternalApplicationId:
+      name: external_application_id
+      in: path
+      required: true
+      description: Unique identifier for the internal application
+      schema:
+        type: string
+    VersionId:
+      name: version_id
+      in: path
+      required: true
+      description: Identifier for the specific version of an application
+      schema:
+        type: string
+    AuthMeHeader:
+      name: Authorization
+      in: header
+      required: true
+      description: Bearer {JWT token}
+      schema:
+        type: string
+        example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  responses:
+    BadRequestError:
+      description: Bad Request / Validation Error
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/StandardErrorResponse"
+          example:
+            error: Validation Error
+            details: Missing or invalid fields
+    UnauthorizedError:
+      description: Unauthorized / Invalid or missing credentials
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/StandardErrorResponse"
+          example:
+            error: Unauthorized
+            details: Token missing or invalid
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/StandardErrorResponse"
+          example:
+            error: Resource not found
+            details: No resource matching the given criteria
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/StandardErrorResponse"
+          example:
+            error: Internal server error
+security:
+- BearerAuth: []
+paths:
+  /auth/login:
+    post:
+      summary: Authenticates a client and returns a JWT token
+      tags:
+      - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/AuthLoginBody"
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for the authenticated client
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  /auth/me:
+    get:
+      summary: Returns client details for an authenticated client
+      tags:
+      - Auth
+      security:
+      - BearerAuth: []
+      parameters:
+      - "$ref": "#/components/parameters/AuthMeHeader"
+      responses:
+        '200':
+          description: Client details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  client:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+  /clients/{client_id}/clusters/{cluster_id}/namespaces:
+    get:
+      summary: Retrieves a list of all namespaces within a specific Kubernetes cluster for a given client.
+      description: Fetches all namespaces within the specified Kubernetes cluster. It is primarily used to populate filter dropdowns in the UI, allowing users to select specific namespaces for more granular data views within a single cluster.
+      operationId: getNamespacesInCluster
+      tags:
+      - Clusters
+      x-consumers:
+        - frontend
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: A list of namespaces within a cluster.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  namespaces:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The namespace ID
+                        name:
+                          type: string
+                          description: The namespace name
+              example:
+                namespaces:
+                  - id: 1
+                    name: "default"
+                  - id: 2
+                    name: "monitoring"
+                  - id: 3
+                    name: "kube-system"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  /clients/{client_id}/clusters:
+    get:
+      summary: Retrieves all clusters for a specific client.
+      description: This endpoint fetches all Kubernetes clusters associated with the given client ID. It is primarily used to populate filter dropdowns in the UI, allowing users to select specific clusters for more granular data views.
+      operationId: getAllClustersForClient
+      tags:
+      - Clusters
+      x-consumers:
+        - frontend
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: A list of clusters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clusters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The cluster ID
+                        name:
+                          type: string
+                          description: The cluster name
+              example:
+                clusters:
+                  - id: 1
+                    name: "dev"
+                  - id: 2
+                    name: "stage"
+                  - id: 3
+                    name: "prod"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  /clients/{client_id}/all_clusters/internal_applications/deprecation_status:
+    get:
+      summary: Retrieves deprecation status of external applications across all clusters for a specific client.
+      description: Fetches the deprecation status of all internal applications installed across all clusters associated with a given client ID. It provides information to help the frontend build a "risk timeline", showing the scheduled deprecation dates for each version of the installed internal applications. This feature is essential for planning upgrades and mitigating risks associated with the use of outdated software.
+      operationId: getClientDeprecationStatus
+      tags:
+      - Internal Applications
+      x-consumers:
+        - frontend
+      x-cached: true
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - name: external_application_id
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filters the applications by the specified external application IDs. Supports multiple IDs.
+        example: "?external_application_id=1&external_application_id=2"
+      - name: cluster_id
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filters the applications by the specified cluster IDs. Supports multiple IDs.
+        example: "?cluster_id=1&cluster_id=2"
+      - name: deprecation_type
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filters the applications by specified deprecation types (e.g., eol, eos, security). Supports multiple deprecation types.
+        example: "?deprecation_type=eol"
+      responses:
+        '200':
+          description: A list of external applications with their deprecation status.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: The name of the external application.
+                        version:
+                          type: string
+                          description: The currently deployed version range of the application across clusters.
+                        latest_version:
+                          type: string
+                          description: The latest available version of the external application from the external server.
+                        clusters:
+                          type: array
+                          items:
+                            type: string
+                          description: A list of clusters where the application is currently deployed.
+                        deprecation_type:
+                          type: string
+                          description: The type of deprecation, either 'eol' (end-of-life) or 'eos' (end-of-support).
+                        deprecation_date:
+                          type: string
+                          format: date
+                          description: The date when the application version is scheduled for deprecation.
+              example:
+                applications:
+                  - name: "argocd"
+                    version: "2.1.4"
+                    latest_version: "2.2.0"
+                    clusters: ["production", "development"]
+                    deprecation_type: "eos"
+                    deprecation_date: "2025-01-01"
+                  - name: "helm-operator"
+                    version: "1.2.1"
+                    latest_version: "1.3.0"
+                    clusters: ["staging", "production"]
+                    deprecation_type: "eol"
+                    deprecation_date: "2025-02-15"
+                  - name: "kube-prometheus"
+                    version: "3.4.5"
+                    latest_version: "3.5.1"
+                    clusters: ["production"]
+                    deprecation_type: "eol"
+                    deprecation_date: "2025-03-20"
+                  - name: "keda"
+                    version: "1.4.1"
+                    latest_version: "1.5.3"
+                    clusters: ["development", "test"]
+                    deprecation_type: "eos"
+                    deprecation_date: "2025-04-30"
+                  - name: "vpc-cni"
+                    version: "v1.2.1"
+                    latest_version: "v1.5.3"
+                    clusters: ["development", "test"]
+                    deprecation_type: "eos"
+                    deprecation_date: "2025-04-30"
+                  - name: "efs-eni"
+                    version: "v1.2.1"
+                    latest_version: "v1.9.3"
+                    clusters: ["development", "test", "production"]
+                    deprecation_type: "eos"
+                    deprecation_date: "2025-04-30"
+                  - name: "external-dns"
+                    version: "0.2.9"
+                    latest_version: "1.6.3"
+                    clusters: ["default", "production"]
+                    deprecation_type: "eol"
+                    deprecation_date: "2025-05-05"
+                  - name: "external-secrets"
+                    version: "1.2.2"
+                    latest_version: "1.67.0"
+                    clusters: ["secrets", "vault"]
+                    deprecation_type: "eol"
+                    deprecation_date: "2025-06-10"
+                  - name: "calico"
+                    version: "1.2.1"
+                    latest_version: "2.1.0"
+                    clusters: ["network", "security"]
+                    deprecation_type: "eol"
+                    deprecation_date: "2025-07-20"
+                  - name: "tigera-operator"
+                    version: "v1.0.1"
+                    latest_version: "v2.1.0"
+                    clusters: ["network", "security"]
+                    deprecation_type: "eol"
+                    deprecation_date: "2025-07-20"
+                  - name: "grafana"
+                    version: "34.0.7"
+                    latest_version: "44.2.0"
+                    clusters: ["monitoring", "operations"]
+                    deprecation_type: "eos"
+                    deprecation_date: "2025-08-15"
+                  - name: "crowdstrike"
+                    version: "1.0.1"
+                    latest_version: "1.3.0"
+                    clusters: ["security", "default"]
+                    deprecation_type: "eol"
+                    deprecation_date: "2025-09-01"
+                  - name: "vpc-cni"
+                    version: "0.2.1"
+                    latest_version: "0.3.0"
+                    clusters: ["network", "production"]
+                    deprecation_type: "eos"
+                    deprecation_date: "2025-10-05"
+                  - name: "datadog"
+                    version: "v0.1.1"
+                    latest_version: "v0.3.0"
+                    clusters: ["network", "production", "dev"]
+                    deprecation_type: "eos"
+                    deprecation_date: "2025-10-05"
+                  - name: "pyrra"
+                    version: "v1.0.1"
+                    latest_version: "v2.3.0"
+                    clusters: ["network", "production"]
+                    deprecation_type: "eos"
+                    deprecation_date: "2026-10-05"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  /external_applications/{external_application_id}:
+    get:
+      summary: Retrieves information about a specific external application.
+      description: This endpoint retrieves information about a specific external application.
+      operationId: getExternalApplicationDetails
+      tags:
+      - External Applications
+      x-consumers:
+      - external-application-version-tracker
+      parameters:
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ExternalApplication"
+              examples:
+                jaeger:
+                  value:
+                    id: "1"
+                    name: "jaeger"
+                    latest_version: "1.4.0"
+                    git_url: "https://github.com/jaegertracing/jaeger"
+                    helm_repository_url: "https://jaegertracing.github.io/helm-charts"
+                    helm_package_name: "jaeger"
+                    maintainers: ["Jaeger Team"]
+                    icon_url: "https://jaegertracing.io/img/jaeger-icon.png"
+                mysql:
+                  value:
+                    id: "13"
+                    name: "mysql"
+                    latest_version: "8.0.26"
+                    git_url: "https://github.com/bitnami/charts"
+                    git_chart_path: "bitnami/mysql"
+                    helm_repository_url: "https://charts.bitnami.com/bitnami"
+                    helm_package_name: "mysql"
+                    maintainers: ["Bitnami"]
+                rabbitmq:
+                  value:
+                    id: "12"
+                    name: "rabbitmq"
+                    latest_version: "8.24.1"
+                    git_url: "https://github.com/bitnami/charts"
+                    git_chart_path: "bitnami/rabbitmq"
+                    helm_repository_url: "https://charts.bitnami.com/bitnami"
+                    helm_package_name: "rabbitmq"
+                    artifacthub_repository_name: "bitnami"
+                    artifacthub_package_name: "rabbitmq"
+                    maintainers: ["Bitnami"]
+                    support_release_count: 3
+                filebeat:
+                  value:
+                    id: "10"
+                    name: "filebeat"
+                    latest_version: "7.17.3"
+                    git_url: "https://github.com/elastic/helm-charts"
+                    git_chart_path: "filebeat"
+                    helm_repository_url: "https://helm.elastic.co"
+                    helm_package_name: "filebeat"
+                    artifacthub_repository_name: "elastic"
+                    artifacthub_package_name: "filebeat"
+                elasticsearch:
+                  value:
+                    id: "8"
+                    name: "elasticsearch"
+                    latest_version: "7.17.3"
+                    git_url: "https://github.com/elastic/helm-charts"
+                    git_chart_path: "elasticsearch"
+                    git_changelog_path: "/app/changelog.md"
+                    helm_repository_url: "https://helm.elastic.co"
+                    helm_package_name: "elasticsearch"
+                    maintainers: ["Elastic"]
+                    support_release_count: 5
+                argocd:
+                  value:
+                    id: "3"
+                    name: "argocd"
+                    latest_version: "4.1.0"
+                    git_url: "https://github.com/argocd/argocd"
+                    helm_repository_url: "https://charts.argocd.io"
+                    helm_package_name: "argocd"
+                    artifacthub_repository_name: "argocd"
+                    artifacthub_package_name: "argocd"
+                    maintainers: ["argocd"]
+                    icon_url: "https://argo-cd.readthedocs.io/en/stable/assets/logo.png"
+                ingress-nginx:
+                  value:
+                    id: "5"
+                    name: "ingress-nginx"
+                    latest_version: "4.7.0"
+                    git_url: "https://github.com/kubernetes/ingress-nginx"
+                    helm_repository_url: "https://kubernetes.github.io/ingress-nginx"
+                    helm_package_name: "ingress-nginx"
+                    artifacthub_repository_name: "ingress-nginx"
+                    artifacthub_package_name: "ingress-nginx"
+                    icon_url: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/docs/assets/logo.png"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  /external_applications/{external_application_id}/versions:
+    get:
+      summary: Retrieves all available versions for a specific external application.
+      operationId: getExternalApplicationVersions
+      description: This endpoint fetches all available versions of a specific external application. It is primarily used to populate a dropdown in the UI, allowing users to select a version to view further details.
+      tags:
+      - External Applications
+      x-consumers:
+      - frontend
+      x-cached: true
+      parameters:
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The version identifier
+                          example: 7.0.5-stable
+              example:
+                versions:
+                - id: "1.0.1"
+                - id: "1.0.2"
+                - id: "1.0.3"
+                - id: "1.0.4"
+                - id: "1.0.5"
+                - id: "1.1.0"
+                - id: "1.2.0"
+                - id: "1.2.1"
+                - id: "1.3.0"
+                - id: "2.0.0"
+                - id: "2.1.0"
+                - id: "2.2.0"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - External Applications
+      x-consumers:
+        - external_application_version_tracker
+      summary: Creates a new version entry for a specific external application.
+      description: This endpoint creates a new version entry for an external application. It requires the label, changes description, and release date for the new version. The endpoint returns a success message with the details of the newly created version or an error message if the required fields are missing.
+      operationId: createExternalApplicationVersion
+      parameters:
+        - "$ref": "#/components/parameters/ExternalApplicationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - "$ref": "#/components/schemas/ExternalApplicationVersion"
+              type: object
+              properties:
+                external_application_id:
+                  description: Omitted in request as it's already in the path.
+                  readOnly: true
+      responses:
+        '201':
+          description: Internal Application Version created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: The unique identifier of the created external application.
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the external application version was created.
+              examples:
+                versionCreated:
+                  summary: Success
+                  value:
+                    id: "1"
+                    created_at: "2025-03-01T12:34:56Z"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+
+
+  /external_applications/{external_application_id}/versions/{version_id}/changelog:
+    get:
+      tags:
+      - External Applications
+      x-consumers:
+      - frontend
+      x-cached: true
+      summary: Retrieves the changelog of an external application, optionally comparing two specific versions.
+      description: This endpoint retrieves the changelog for a specific external application,including the release dates for each version. Allows a comparison between `version_id` and the optional `compare` version. If `compare` is not specified, it returns the full changelog for `version_id`.
+      operationId: getExternalApplicationChangelog
+      parameters:
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      - "$ref": "#/components/parameters/VersionId"
+      - name: compare
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        label:
+                          type: string
+                          description: The version label
+                        changes:
+                          type: string
+                          description: Changes introduced in this version
+                        release_date:
+                          type: string
+                          format: date
+                          description: The release date of this version
+              examples:
+                full:
+                  value:
+                    versions:
+                      - label: "7.7.10"
+                        changes: "Bump argo-cd to v2.13.2"
+                        release_date: "2024-12-12"
+                      - label: "7.7.9"
+                        changes: "Fix honorLabels config template"
+                        release_date: "2024-12-11"
+                      - label: "7.7.8"
+                        changes: "Bump argocd-extension-installer to v0.0.8"
+                        release_date: "2024-12-09"
+                      - label: "7.7.7"
+                        changes: "Allowed the use of templates in the server.ingress.extraTls field"
+                        release_date: "2024-12-02"
+                      - label: "7.7.6"
+                        changes: "REDIS_PASSWORD optional flag change"
+                        release_date: "2024-11-28"
+                      - label: "7.7.5"
+                        changes: "Update application CRD"
+                        release_date: "2024-11-21"
+                      - label: "7.7.4"
+                        changes: "Bump argo-cd to v2.13.1"
+                        release_date: "2024-11-20"
+                compared:
+                  value:
+                    versions:
+                      - label: "7.7.9"
+                        changes: "Fix honorLabels config template"
+                        release_date: "2024-12-11"
+                      - label: "7.7.8"
+                        changes: "Bump argocd-extension-installer to v0.0.8"
+                        release_date: "2024-12-09"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  /external_applications/{external_application_id}/versions/{version_id}/values:
+    get:
+      tags:
+      - External Applications
+      x-consumers:
+      - frontend
+      x-cached: true
+      summary: Retrieves the default helm values for a specific version of an external application.
+      description: Retrieves the default Helm values.yaml content for a specific external application version.
+      operationId: getExternalApplicationDefaultHelmValues
+      parameters:
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      - "$ref": "#/components/parameters/VersionId"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/yaml:
+              schema:
+                type: string
+              examples:
+                older:
+                  summary: "Older version values"
+                  value: |
+                    replicaCount: 1
+                    image:
+                      repository: nginx
+                      pullPolicy: IfNotPresent
+                      tag: "stable"
+                    service:
+                      type: ClusterIP
+                      port: 80
+                    ingress:
+                      enabled: true
+                      annotations:
+                        kubernetes.io/ingress.class: nginx
+                        nginx.ingress.kubernetes.io/rewrite-target: /
+                      paths:
+                        - /
+                      hosts:
+                        - chart-example.local
+                      tls: []
+                    resources:
+                      limits:
+                        cpu: 100m
+                        memory: 128Mi
+                      requests:
+                        cpu: 100m
+                        memory: 128Mi
+                    nodeSelector: {}
+                    tolerations: []
+                    affinity: {}
+                newer:
+                  summary: "Newer version values"
+                  value: |
+                    replicaCount: 2
+                    image:
+                      repository: nginx
+                      pullPolicy: Always
+                      tag: "latest"
+                    service:
+                      type: LoadBalancer
+                      port: 80
+                    ingress:
+                      enabled: true
+                      annotations:
+                        kubernetes.io/ingress.class: nginx
+                        nginx.ingress.kubernetes.io/rewrite-target: /newpath
+                      paths:
+                        - /newpath
+                      hosts:
+                        - chart-example.local
+                      tls: []
+                    resources:
+                      limits:
+                        cpu: 200m
+                        memory: 256Mi
+                      requests:
+                        cpu: 100m
+                        memory: 200Mi
+                    nodeSelector: {}
+                    tolerations: []
+                    affinity: {}
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  /external_applications/{external_application_id}/versions/{version_id}/values/dot_notation:
+    get:
+      tags:
+        - External Applications
+      x-cached: true
+      x-consumers:
+      - frontend
+      summary: Retrieves the default helm values for a specific version of an external application, in a dot notation format.
+      description: Fetches the default Helm values.yaml content for a specific external application version, in a dot notation format.
+      operationId: getExternalApplicationDefaultHelmValuesDotNotation
+      parameters:
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      - "$ref": "#/components/parameters/VersionId"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dot_notation_values:
+                    type: array
+                    items:
+                      type: string
+                example:
+                  - "replicaCount"
+                  - "image.repository"
+                  - "image.pullPolicy"
+                  - "image.tag"
+                  - "service.type"
+                  - "service.port"
+                  - "ingress.enabled"
+                  - "ingress.annotations.kubernetes.io/ingress.class"
+                  - "ingress.paths"
+                  - "ingress.hosts"
+                  - "resources.limits.cpu"
+                  - "resources.limits.memory"
+                  - "resources.requests.cpu"
+                  - "resources.requests.memory"
+                  - "nodeSelector"
+                  - "tolerations"
+                  - "affinity"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+
+  /external_applications/{external_application_id}/versions/{version_id}/templates:
+    get:
+      tags:
+      - External Applications
+      x-consumers:
+      - frontend
+      x-cached: true
+      summary: Retrieves Helm templates for a specific version of an external application.
+      description: Returns the file content of various Kubernetes resource definitions used by the Helm chart, in a base64 decoded format.
+      operationId: getExternalApplicationTemplates
+      parameters:
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      - "$ref": "#/components/parameters/VersionId"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        data:
+                          type: string
+              examples:
+                newer:
+                  value:
+                    templates:
+                      - name: "templates/argocd-application-controller/servicemonitor.yaml"
+                        data: "e3stIGlmIGFuZCAoLkNhcGFiaWxpdGllcy5BUElWZXJzaW9ucy5IYXMgIm1vbml0b3JpbmcuY29yZW9zLmNvbS92MSIpIC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLmVuYWJsZWQgLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3IuZW5hYmxlZCB9fQphcGlWZXJzaW9uOiBtb25pdG9yaW5nLmNvcmVvcy5jb20vdjEKa2luZDogU2VydmljZU1vbml0b3IKbWV0YWRhdGE6CiAgbmFtZToge3sgdGVtcGxhdGUgImFyZ28tY2QuY29udHJvbGxlci5mdWxsbmFtZSIgLiB9fQogIG5hbWVzcGFjZToge3sgZGVmYXVsdCAoaW5jbHVkZSAgImFyZ28tY2QubmFtZXNwYWNlIiAuKSAuVmFsdWVzLmNvbnRyb2xsZXIubWV0cmljcy5zZXJ2aWNlTW9uaXRvci5uYW1lc3BhY2UgfCBxdW90ZSB9fQogIGxhYmVsczoKICAgIHt7LSBpbmNsdWRlICJhcmdvLWNkLmxhYmVscyIgKGRpY3QgImNvbnRleHQiIC4gImNvbXBvbmVudCIgLlZhbHVlcy5jb250cm9sbGVyLm5hbWUgIm5hbWUiIC5WYWx1ZXMuY29udHJvbGxlci5uYW1lKSB8IG5pbmRlbnQgNCB9fQogICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3Iuc2VsZWN0b3IgfX0KICAgICAge3stIHRvWWFtbCAuIHwgbmluZGVudCA0IH19CiAgICB7ey0gZW5kIH19CiAgICB7ey0gd2l0aCAuVmFsdWVzLmNvbnRyb2xsZXIubWV0cmljcy5zZXJ2aWNlTW9uaXRvci5hZGRpdGlvbmFsTGFiZWxzIH19CiAgICAgIHt7LSB0b1lhbWwgLiB8IG5pbmRlbnQgNCB9fQogICAge3stIGVuZCB9fQogIHt7LSB3aXRoIC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLnNlcnZpY2VNb25pdG9yLmFubm90YXRpb25zIH19CiAgYW5ub3RhdGlvbnM6CiAgICB7ey0gdG9ZYW1sIC4gfCBuaW5kZW50IDQgfX0KICB7ey0gZW5kIH19CnNwZWM6CiAgZW5kcG9pbnRzOgogICAgLSBwb3J0OiB7eyAuVmFsdWVzLmNvbnRyb2xsZXIubWV0cmljcy5zZXJ2aWNlLnBvcnROYW1lIH19CiAgICAgIHt7LSB3aXRoIC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLnNlcnZpY2VNb25pdG9yLmludGVydmFsIH19CiAgICAgIGludGVydmFsOiB7eyAuIH19CiAgICAgIHt7LSBlbmQgfX0KICAgICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3Iuc2NyYXBlVGltZW91dCB9fQogICAgICBzY3JhcGVUaW1lb3V0OiB7eyAuIH19CiAgICAgIHt7LSBlbmQgfX0KICAgICAgcGF0aDogL21ldHJpY3MKICAgICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3IucmVsYWJlbGluZ3MgfX0KICAgICAgcmVsYWJlbGluZ3M6CiAgICAgICAge3stIHRvWWFtbCAuIHwgbmluZGVudCA4IH19CiAgICAgIHt7LSBlbmQgfX0KICAgICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3IubWV0cmljUmVsYWJlbGluZ3MgfX0KICAgICAgbWV0cmljUmVsYWJlbGluZ3M6CiAgICAgICAge3stIHRvWWFtbCAuIHwgbmluZGVudCA4IH19CiAgICAgIHt7LSBlbmQgfX0KICAgICAgaG9ub3JMYWJlbHM6IHt7IC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLnNlcnZpY2VNb25pdG9yLmhvbm9yTGFiZWxzIH19CiAgICAgIHt7LSB3aXRoIC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLnNlcnZpY2VNb25pdG9yLnNjaGVtZSB9fQogICAgICBzY2hlbWU6IHt7IC4gfX0KICAgICAge3stIGVuZCB9fQogICAgICB7ey0gd2l0aCAuVmFsdWVzLmNvbnRyb2xsZXIubWV0cmljcy5zZXJ2aWNlTW9uaXRvci50bHNDb25maWcgfX0KICAgICAgdGxzQ29uZmlnOgogICAgICAgIHt7LSB0b1lhbWwgLiB8IG5pbmRlbnQgOCB9fQogICAgICB7ey0gZW5kIH19CiAgbmFtZXNwYWNlU2VsZWN0b3I6CiAgICBtYXRjaE5hbWVzOgogICAgICAtIHt7IGluY2x1ZGUgImFyZ28tY2QubmFtZXNwYWNlIiAuIH19CiAgc2VsZWN0b3I6CiAgICBtYXRjaExhYmVsczoKICAgICAge3stIGluY2x1ZGUgImFyZ28tY2Quc2VsZWN0b3JMYWJlbHMiIChkaWN0ICJjb250ZXh0IiAuICJjb21wb25lbnQiIC5WYWx1ZXMuY29udHJvbGxlci5uYW1lICJuYW1lIiAibWV0cmljcyIpIHwgbmluZGVudCA2IH19Cnt7LSBlbmQgfX0K"
+                      - name: "templates/argocd-server/clusterrole.yaml"
+                        data: "e3stIGlmIC5WYWx1ZXMuY3JlYXRlQ2x1c3RlclJvbGVzIH19CmFwaVZlcnNpb246IHJiYWMuYXV0aG9yaXphdGlvbi5rOHMuaW8vdjEKa2luZDogQ2x1c3RlclJvbGUKbWV0YWRhdGE6CiAgbmFtZToge3sgaW5jbHVkZSAiYXJnby1jZC5zZXJ2ZXIuZnVsbG5hbWUiIC4gfX0KICBsYWJlbHM6CiAgICB7ey0gaW5jbHVkZSAiYXJnby1jZC5sYWJlbHMiIChkaWN0ICJjb250ZXh0IiAuICJjb21wb25lbnQiIC5WYWx1ZXMuc2VydmVyLm5hbWUgIm5hbWUiIC5WYWx1ZXMuc2VydmVyLm5hbWUpIHwgbmluZGVudCA0IH19CnJ1bGVzOgogIHt7LSBpZiAuVmFsdWVzLnNlcnZlci5jbHVzdGVyUm9sZVJ1bGVzLmVuYWJsZWQgfX0KICAgIHt7LSB0b1lhbWwgLlZhbHVlcy5zZXJ2ZXIuY2x1c3RlclJvbGVSdWxlcy5ydWxlcyB8IG5pbmRlbnQgMiB9fQogIHt7LSBlbHNlIH19CiAgLSBhcGlHcm91cHM6CiAgICAgIC0gJyonCiAgICByZXNvdXJjZXM6CiAgICAgIC0gJyonCiAgICB2ZXJiczoKICAgICAgLSBkZWxldGUgICMgc3VwcG9ydHMgZGVsZXRpb24gYSBsaXZlIG9iamVjdCBpbiBVSQogICAgICAtIGdldCAgICAgIyBzdXBwb3J0cyB2aWV3aW5nIGxpdmUgb2JqZWN0IG1hbmlmZXN0IGluIFVJCiAgICAgIC0gcGF0Y2ggICAjIHN1cHBvcnRzIGBhcmdvY2QgYXBwIHBhdGNoYAogIC0gYXBpR3JvdXBzOgogICAgICAtICIiCiAgICByZXNvdXJjZXM6CiAgICAgIC0gZXZlbnRzCiAgICB2ZXJiczoKICAgICAgLSBsaXN0ICAgICMgc3VwcG9ydHMgbGlzdGluZyBldmVudHMgaW4gVUkKICAgICAgLSBjcmVhdGUKICAtIGFwaUdyb3VwczoKICAgICAgLSAiIgogICAgcmVzb3VyY2VzOgogICAgICAtIHBvZHMKICAgICAgLSBwb2RzL2xvZwogICAgdmVyYnM6CiAgICAgIC0gZ2V0ICAgICAjIHN1cHBvcnRzIHZpZXdpbmcgcG9kIGxvZ3MgZnJvbSBVSQogIHt7LSBpZiBlcSAodG9TdHJpbmcgKGluZGV4IC5WYWx1ZXMuY29uZmlncy5jbSAiZXhlYy5lbmFibGVkIikpICJ0cnVlIiB9fQogIC0gYXBpR3JvdXBzOgogICAgICAtICIiCiAgICByZXNvdXJjZXM6CiAgICAgIC0gcG9kcy9leGVjCiAgICB2ZXJiczoKICAgICAgLSBjcmVhdGUKICB7ey0gZW5kIH19CiAgLSBhcGlHcm91cHM6CiAgICAgIC0gYXJnb3Byb2ouaW8KICAgIHJlc291cmNlczoKICAgICAgLSBhcHBsaWNhdGlvbnMKICAgICAgLSBhcHBsaWNhdGlvbnNldHMKICAgIHZlcmJzOgogICAgICAtIGdldAogICAgICAtIGxpc3QKICAgICAgLSB1cGRhdGUKICAgICAgLSB3YXRjaAogIHt7LSBpZiAoaW5kZXggLlZhbHVlcy5jb25maWdzLnBhcmFtcyAiYXBwbGljYXRpb24ubmFtZXNwYWNlcyIpIH19CiAgLSBhcGlHcm91cHM6CiAgICAgIC0gImFyZ29wcm9qLmlvIgogICAgcmVzb3VyY2VzOgogICAgICAtICJhcHBsaWNhdGlvbnMiCiAgICB2ZXJiczoKICAgICAgLSBjcmVhdGUKICAgICAgLSBkZWxldGUKICAgICAgLSB1cGRhdGUKICAgICAgLSBwYXRjaAogIHt7LSBlbmQgfX0KICAtIGFwaUdyb3VwczoKICAgICAgLSBiYXRjaAogICAgcmVzb3VyY2VzOgogICAgICB7ey8qIHN1cHBvcnRzIHRyaWdnZXJpbmcgam9icyBmcm9tIFVJICovfX0KICAgICAgLSBqb2JzCiAgICB2ZXJiczoKICAgICAgLSBjcmVhdGUKICAtIGFwaUdyb3VwczoKICAgICAgLSBhcmdvcHJvai5pbwogICAgcmVzb3VyY2VzOgogICAgICAtIHdvcmtmbG93cwogICAgdmVyYnM6CiAgICAgIHt7Lyogc3VwcG9ydHMgdHJpZ2dlcmluZyB3b3JrZmxvd3MgZnJvbSBVSSAqL319CiAgICAgIC0gY3JlYXRlCiAge3stIGVuZCB9fQp7ey0gZW5kIH19Cg=="
+                      - name: "helpers.tpl"
+                        data: "e3svKiB2aW06IHNldCBmaWxldHlwZT1tdXN0YWNoZTogKi99fQp7ey8qCkNyZWF0ZSBjb250cm9sbGVyIG5hbWUgYW5kIHZlcnNpb24gYXMgdXNlZCBieSB0aGUgY2hhcnQgbGFiZWwuClRydW5jYXRlZCBhdCA1MiBjaGFycyBiZWNhdXNlIFN0YXRlZnVsU2V0IGxhYmVsICdjb250cm9sbGVyLXJldmlzaW9uLWhhc2gnIGlzIGxpbWl0ZWQKdG8gNjMgY2hhcnMgYW5kIGl0IGluY2x1ZGVzIDEwIGNoYXJzIG9mIGhhc2ggYW5kIGEgc2VwYXJhdGluZyAnLScuCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb250cm9sbGVyLmZ1bGxuYW1lIiAtfX0Ke3stIHByaW50ZiAiJXMtJXMiIChpbmNsdWRlICJhcmdvLWNkLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLmNvbnRyb2xsZXIubmFtZSB8IHRydW5jIDUyIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSB0aGUgbmFtZSBvZiB0aGUgY29udHJvbGxlciBzZXJ2aWNlIGFjY291bnQgdG8gdXNlCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb250cm9sbGVyLnNlcnZpY2VBY2NvdW50TmFtZSIgLX19Cnt7LSBpZiAuVmFsdWVzLmNvbnRyb2xsZXIuc2VydmljZUFjY291bnQuY3JlYXRlIC19fQogICAge3sgZGVmYXVsdCAoaW5jbHVkZSAiYXJnby1jZC5jb250cm9sbGVyLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLmNvbnRyb2xsZXIuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZWxzZSAtfX0KICAgIHt7IGRlZmF1bHQgImRlZmF1bHQiIC5WYWx1ZXMuY29udHJvbGxlci5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbmQgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSBkZXggbmFtZSBhbmQgdmVyc2lvbiBhcyB1c2VkIGJ5IHRoZSBjaGFydCBsYWJlbC4KKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLmRleC5mdWxsbmFtZSIgLX19Cnt7LSBwcmludGYgIiVzLSVzIiAoaW5jbHVkZSAiYXJnby1jZC5mdWxsbmFtZSIgLikgLlZhbHVlcy5kZXgubmFtZSB8IHRydW5jIDYzIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSBEZXggc2VydmVyIGVuZHBvaW50CiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5kZXguc2VydmVyIiAtfX0Ke3stICRpbnNlY3VyZSA6PSBpbmRleCAuVmFsdWVzLmNvbmZpZ3MucGFyYW1zICJkZXhzZXJ2ZXIuZGlzYWJsZS50bHMiIHwgdG9TdHJpbmcgLX19Cnt7LSAkc2NoZW1lIDo9IChlcSAkaW5zZWN1cmUgInRydWUiKSB8IHRlcm5hcnkgImh0dHAiICJodHRwcyIgLX19Cnt7LSAkaG9zdCA6PSBpbmNsdWRlICJhcmdvLWNkLmRleC5mdWxsbmFtZSIgLiAtfX0Ke3stICRwb3J0IDo9IGludCAuVmFsdWVzLmRleC5zZXJ2aWNlUG9ydEh0dHAgLX19Cnt7LSBwcmludGYgIiVzOi8vJXM6JWQiICRzY2hlbWUgJGhvc3QgJHBvcnQgfX0Ke3stIGVuZCB9fQoKe3svKgpDcmVhdGUgdGhlIG5hbWUgb2YgdGhlIGRleCBzZXJ2aWNlIGFjY291bnQgdG8gdXNlCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5kZXguc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMuZGV4LnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2QuZGV4LmZ1bGxuYW1lIiAuKSAuVmFsdWVzLmRleC5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5kZXguc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgcmVkaXMgbmFtZSBhbmQgdmVyc2lvbiBhcyB1c2VkIGJ5IHRoZSBjaGFydCBsYWJlbC4KKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLnJlZGlzLmZ1bGxuYW1lIiAtfX0Ke3stICRyZWRpc0hhIDo9IChpbmRleCAuVmFsdWVzICJyZWRpcy1oYSIpIC19fQp7ey0gJHJlZGlzSGFDb250ZXh0IDo9IGRpY3QgIkNoYXJ0IiAoZGljdCAiTmFtZSIgInJlZGlzLWhhIikgIlJlbGVhc2UiIC5SZWxlYXNlICJWYWx1ZXMiICRyZWRpc0hhIC19fQp7ey0gaWYgJHJlZGlzSGEuZW5hYmxlZCAtfX0KICAgIHt7LSBpZiAkcmVkaXNIYS5oYXByb3h5LmVuYWJsZWQgLX19CiAgICAgICAge3stIHByaW50ZiAiJXMtaGFwcm94eSIgKGluY2x1ZGUgInJlZGlzLWhhLmZ1bGxuYW1lIiAkcmVkaXNIYUNvbnRleHQpIHwgdHJ1bmMgNjMgfCB0cmltU3VmZml4ICItIiAtfX0KICAgIHt7LSBlbmQgLX19Cnt7LSBlbHNlIC19fQp7ey0gcHJpbnRmICIlcy0lcyIgKGluY2x1ZGUgImFyZ28tY2QuZnVsbG5hbWUiIC4pIC5WYWx1ZXMucmVkaXMubmFtZSB8IHRydW5jIDYzIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cnt7LSBlbmQgLX19Cgp7ey8qClJldHVybiBSZWRpcyBzZXJ2ZXIgZW5kcG9pbnQKKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLnJlZGlzLnNlcnZlciIgLX19Cnt7LSAkcmVkaXNIYSA6PSAoaW5kZXggLlZhbHVlcyAicmVkaXMtaGEiKSAtfX0Ke3stIGlmIG9yIChhbmQgLlZhbHVlcy5yZWRpcy5lbmFibGVkIChub3QgJHJlZGlzSGEuZW5hYmxlZCkpIChhbmQgJHJlZGlzSGEuZW5hYmxlZCAkcmVkaXNIYS5oYXByb3h5LmVuYWJsZWQpIH19CiAgICB7ey0gcHJpbnRmICIlczolcyIgKGluY2x1ZGUgImFyZ28tY2QucmVkaXMuZnVsbG5hbWUiIC4pICAodG9TdHJpbmcgLlZhbHVlcy5yZWRpcy5zZXJ2aWNlUG9ydCkgfX0Ke3stIGVsc2UgaWYgYW5kIC5WYWx1ZXMuZXh0ZXJuYWxSZWRpcy5ob3N0IC5WYWx1ZXMuZXh0ZXJuYWxSZWRpcy5wb3J0IH19CiAgICB7ey0gcHJpbnRmICIlczolcyIgLlZhbHVlcy5leHRlcm5hbFJlZGlzLmhvc3QgKHRvU3RyaW5nIC5WYWx1ZXMuZXh0ZXJuYWxSZWRpcy5wb3J0KSB9fQp7ey0gZW5kIH19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSB0aGUgbmFtZSBvZiB0aGUgcmVkaXMgc2VydmljZSBhY2NvdW50IHRvIHVzZQoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QucmVkaXMuc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMucmVkaXMuc2VydmljZUFjY291bnQuY3JlYXRlIC19fQogICAge3sgZGVmYXVsdCAoaW5jbHVkZSAiYXJnby1jZC5yZWRpcy5mdWxsbmFtZSIgLikgLlZhbHVlcy5yZWRpcy5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5yZWRpcy5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbmQgLX19Cnt7LSBlbmQgLX19CgoKe3svKgpDcmVhdGUgUmVkaXMgc2VjcmV0LWluaXQgbmFtZQoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QucmVkaXNTZWNyZXRJbml0LmZ1bGxuYW1lIiAtfX0Ke3stIHByaW50ZiAiJXMtJXMiIChpbmNsdWRlICJhcmdvLWNkLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnJlZGlzU2VjcmV0SW5pdC5uYW1lIHwgdHJ1bmMgNjMgfCB0cmltU3VmZml4ICItIiAtfX0Ke3stIGVuZCAtfX0KCnt7LyoKQ3JlYXRlIHRoZSBuYW1lIG9mIHRoZSBSZWRpcyBzZWNyZXQtaW5pdCBzZXJ2aWNlIGFjY291bnQgdG8gdXNlCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5yZWRpc1NlY3JldEluaXQuc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMucmVkaXNTZWNyZXRJbml0LnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2QucmVkaXNTZWNyZXRJbml0LmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnJlZGlzU2VjcmV0SW5pdC5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5yZWRpc1NlY3JldEluaXQuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgYXJnb2NkIHNlcnZlciBuYW1lIGFuZCB2ZXJzaW9uIGFzIHVzZWQgYnkgdGhlIGNoYXJ0IGxhYmVsLgoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2Quc2VydmVyLmZ1bGxuYW1lIiAtfX0Ke3stIHByaW50ZiAiJXMtJXMiIChpbmNsdWRlICJhcmdvLWNkLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnNlcnZlci5uYW1lIHwgdHJ1bmMgNjMgfCB0cmltU3VmZml4ICItIiAtfX0Ke3stIGVuZCAtfX0KCnt7LyoKQ3JlYXRlIHRoZSBuYW1lIG9mIHRoZSBBcmdvIENEIHNlcnZlciBzZXJ2aWNlIGFjY291bnQgdG8gdXNlCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5zZXJ2ZXIuc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMuc2VydmVyLnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2Quc2VydmVyLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnNlcnZlci5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5zZXJ2ZXIuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgYXJnb2NkIHJlcG8tc2VydmVyIG5hbWUgYW5kIHZlcnNpb24gYXMgdXNlZCBieSB0aGUgY2hhcnQgbGFiZWwuCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5yZXBvU2VydmVyLmZ1bGxuYW1lIiAtfX0Ke3stIHByaW50ZiAiJXMtJXMiIChpbmNsdWRlICJhcmdvLWNkLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnJlcG9TZXJ2ZXIubmFtZSB8IHRydW5jIDYzIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSB0aGUgbmFtZSBvZiB0aGUgcmVwby1zZXJ2ZXIgc2VydmljZSBhY2NvdW50IHRvIHVzZQoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QucmVwb1NlcnZlci5zZXJ2aWNlQWNjb3VudE5hbWUiIC19fQp7ey0gaWYgLlZhbHVlcy5yZXBvU2VydmVyLnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2QucmVwb1NlcnZlci5mdWxsbmFtZSIgLikgLlZhbHVlcy5yZXBvU2VydmVyLnNlcnZpY2VBY2NvdW50Lm5hbWUgfX0Ke3stIGVsc2UgLX19CiAgICB7eyBkZWZhdWx0ICJkZWZhdWx0IiAuVmFsdWVzLnJlcG9TZXJ2ZXIuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgYXJnb2NkIGFwcGxpY2F0aW9uIHNldCBuYW1lIGFuZCB2ZXJzaW9uIGFzIHVzZWQgYnkgdGhlIGNoYXJ0IGxhYmVsLgoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QuYXBwbGljYXRpb25TZXQuZnVsbG5hbWUiIC19fQp7ey0gcHJpbnRmICIlcy0lcyIgKGluY2x1ZGUgImFyZ28tY2QuZnVsbG5hbWUiIC4pIC5WYWx1ZXMuYXBwbGljYXRpb25TZXQubmFtZSB8IHRydW5jIDYzIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSB0aGUgbmFtZSBvZiB0aGUgYXBwbGljYXRpb24gc2V0IHNlcnZpY2UgYWNjb3VudCB0byB1c2UKKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLmFwcGxpY2F0aW9uU2V0LnNlcnZpY2VBY2NvdW50TmFtZSIgLX19Cnt7LSBpZiAuVmFsdWVzLmFwcGxpY2F0aW9uU2V0LnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2QuYXBwbGljYXRpb25TZXQuZnVsbG5hbWUiIC4pIC5WYWx1ZXMuYXBwbGljYXRpb25TZXQuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZWxzZSAtfX0KICAgIHt7IGRlZmF1bHQgImRlZmF1bHQiIC5WYWx1ZXMuYXBwbGljYXRpb25TZXQuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgYXJnb2NkIG5vdGlmaWNhdGlvbnMgbmFtZSBhbmQgdmVyc2lvbiBhcyB1c2VkIGJ5IHRoZSBjaGFydCBsYWJlbC4KKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLm5vdGlmaWNhdGlvbnMuZnVsbG5hbWUiIC19fQp7ey0gcHJpbnRmICIlcy0lcyIgKGluY2x1ZGUgImFyZ28tY2QuZnVsbG5hbWUiIC4pIC5WYWx1ZXMubm90aWZpY2F0aW9ucy5uYW1lIHwgdHJ1bmMgNjMgfCB0cmltU3VmZml4ICItIiAtfX0Ke3stIGVuZCAtfX0KCnt7LyoKQ3JlYXRlIHRoZSBuYW1lIG9mIHRoZSBub3RpZmljYXRpb25zIHNlcnZpY2UgYWNjb3VudCB0byB1c2UKKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLm5vdGlmaWNhdGlvbnMuc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMubm90aWZpY2F0aW9ucy5zZXJ2aWNlQWNjb3VudC5jcmVhdGUgLX19CiAgICB7eyBkZWZhdWx0IChpbmNsdWRlICJhcmdvLWNkLm5vdGlmaWNhdGlvbnMuZnVsbG5hbWUiIC4pIC5WYWx1ZXMubm90aWZpY2F0aW9ucy5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5ub3RpZmljYXRpb25zLnNlcnZpY2VBY2NvdW50Lm5hbWUgfX0Ke3stIGVuZCAtfX0Ke3stIGVuZCAtfX0KCnt7LyoKQXJnbyBDb25maWd1cmF0aW9uIFByZXNldCBWYWx1ZXMgKEluZmx1ZW5jZWQgYnkgVmFsdWVzIGNvbmZpZ3VyYXRpb24pCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb25maWcuY20ucHJlc2V0cyIgLX19Cnt7LSAkcHJlc2V0cyA6PSBkaWN0IC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzICJ1cmwiIChwcmludGYgImh0dHBzOi8vJXMiIC5WYWx1ZXMuZ2xvYmFsLmRvbWFpbikgLX19Cnt7LSBpZiBlcSAodG9TdHJpbmcgKGluZGV4IC5WYWx1ZXMuY29uZmlncy5jbSAic3RhdHVzYmFkZ2UuZW5hYmxlZCIpKSAidHJ1ZSIgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgInN0YXR1c2JhZGdlLnVybCIgKHByaW50ZiAiaHR0cHM6Ly8lcy8iIC5WYWx1ZXMuZ2xvYmFsLmRvbWFpbikgLX19Cnt7LSBlbmQgLX19Cnt7LSBpZiAuVmFsdWVzLmNvbmZpZ3Muc3R5bGVzIC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzICJ1aS5jc3N1cmwiICIuL2N1c3RvbS9jdXN0b20uc3R5bGVzLmNzcyIgLX19Cnt7LSBlbmQgLX19Cnt7LSB0b1lhbWwgJHByZXNldHMgfX0Ke3stIGVuZCAtfX0KCnt7LyoKTWVyZ2UgQXJnbyBDb25maWd1cmF0aW9uIHdpdGggUHJlc2V0IENvbmZpZ3VyYXRpb24KKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLmNvbmZpZy5jbSIgLX19Cnt7LSAkY29uZmlnIDo9IG9taXQgLlZhbHVlcy5jb25maWdzLmNtICJjcmVhdGUiICJhbm5vdGF0aW9ucyIgLX19Cnt7LSAkcHJlc2V0IDo9IGluY2x1ZGUgImFyZ28tY2QuY29uZmlnLmNtLnByZXNldHMiIC4gfCBmcm9tWWFtbCB8IGRlZmF1bHQgZGljdCAtfX0Ke3stIHJhbmdlICRrZXksICR2YWx1ZSA6PSBtZXJnZU92ZXJ3cml0ZSAkcHJlc2V0ICRjb25maWcgfX0Ke3stICRmbXRlZCA6PSAkdmFsdWUgfCB0b1N0cmluZyB9fQp7ey0gaWYgbm90IChlcSAkZm10ZWQgIiIpIH19Cnt7ICRrZXkgfX06IHt7ICRmbXRlZCB8IHRvWWFtbCB9fQp7ey0gZW5kIH19Cnt7LSBlbmQgfX0Ke3stIGVuZCAtfX0KCnt7LyoKQXJnbyBQYXJhbXMgRGVmYXVsdCBDb25maWd1cmF0aW9uIFByZXNldHMKTk9URTogQ29uZmlndXJhdGlvbiBrZXlzIG11c3QgYmUgc3RvcmVkIGFzIGRpY3QgYmVjYXVzZSBZQU1MIHRyZWF0cyBkb3QgYXMgc2VwYXJhdG9yCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb25maWcucGFyYW1zLnByZXNldHMiIC19fQp7ey0gJHByZXNldHMgOj0gZGljdCAtfX0Ke3stICRfIDo9IHNldCAkcHJlc2V0cyAicmVwby5zZXJ2ZXIiIChwcmludGYgIiVzOiVzIiAoaW5jbHVkZSAiYXJnby1jZC5yZXBvU2VydmVyLmZ1bGxuYW1lIiAuKSAoLlZhbHVlcy5yZXBvU2VydmVyLnNlcnZpY2UucG9ydCB8IHRvU3RyaW5nKSkgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgInNlcnZlci5yZXBvLnNlcnZlci5zdHJpY3QudGxzIiAoLlZhbHVlcy5yZXBvU2VydmVyLmNlcnRpZmljYXRlU2VjcmV0LmVuYWJsZWQgfCB0b1N0cmluZyApIC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzICJyZWRpcy5zZXJ2ZXIiIChpbmNsdWRlICJhcmdvLWNkLnJlZGlzLnNlcnZlciIgLikgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgImFwcGxpY2F0aW9uc2V0Y29udHJvbGxlci5lbmFibGUubGVhZGVyLmVsZWN0aW9uIiAoZ3QgKCguVmFsdWVzLmFwcGxpY2F0aW9uU2V0LnJlcGxpY2FzIHwgZGVmYXVsdCAuVmFsdWVzLmFwcGxpY2F0aW9uU2V0LnJlcGxpY2FDb3VudCkgfCBpbnQ2NCkgMSkgLX19Cnt7LSBpZiAuVmFsdWVzLmRleC5lbmFibGVkIC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzICJzZXJ2ZXIuZGV4LnNlcnZlciIgKGluY2x1ZGUgImFyZ28tY2QuZGV4LnNlcnZlciIgLikgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgInNlcnZlci5kZXguc2VydmVyLnN0cmljdC50bHMiIC5WYWx1ZXMuZGV4LmNlcnRpZmljYXRlU2VjcmV0LmVuYWJsZWQgLX19Cnt7LSBlbmQgLX19Cnt7LSByYW5nZSAkY29tcG9uZW50IDo9IHR1cGxlICJhcHBsaWNhdGlvbnNldGNvbnRyb2xsZXIiICJjb250cm9sbGVyIiAic2VydmVyIiAicmVwb3NlcnZlciIgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgKHByaW50ZiAiJXMubG9nLmZvcm1hdCIgJGNvbXBvbmVudCkgJC5WYWx1ZXMuZ2xvYmFsLmxvZ2dpbmcuZm9ybWF0IC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzIChwcmludGYgIiVzLmxvZy5sZXZlbCIgJGNvbXBvbmVudCkgJC5WYWx1ZXMuZ2xvYmFsLmxvZ2dpbmcubGV2ZWwgLX19Cnt7LSBlbmQgLX19Cnt7LSB0b1lhbWwgJHByZXNldHMgfX0Ke3stIGVuZCAtfX0KCnt7LyoKTWVyZ2UgQXJnbyBQYXJhbXMgQ29uZmlndXJhdGlvbiB3aXRoIFByZXNldCBDb25maWd1cmF0aW9uCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb25maWcucGFyYW1zIiAtfX0Ke3stICRjb25maWcgOj0gb21pdCAuVmFsdWVzLmNvbmZpZ3MucGFyYW1zICJjcmVhdGUiICJhbm5vdGF0aW9ucyIgfX0Ke3stICRwcmVzZXQgOj0gaW5jbHVkZSAiYXJnby1jZC5jb25maWcucGFyYW1zLnByZXNldHMiIC4gfCBmcm9tWWFtbCB8IGRlZmF1bHQgZGljdCAtfX0Ke3stIHJhbmdlICRrZXksICR2YWx1ZSA6PSBtZXJnZU92ZXJ3cml0ZSAkcHJlc2V0ICRjb25maWcgfX0Ke3sgJGtleSB9fToge3sgdG9TdHJpbmcgJHZhbHVlIHwgdG9ZYW1sIH19Cnt7LSBlbmQgfX0Ke3stIGVuZCAtfX0KCnt7LyoKRXhwYW5kIHRoZSBuYW1lc3BhY2Ugb2YgdGhlIHJlbGVhc2UuCkFsbG93cyBvdmVycmlkaW5nIGl0IGZvciBtdWx0aS1uYW1lc3BhY2UgZGVwbG95bWVudHMgaW4gY29tYmluZWQgY2hhcnRzLgoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QubmFtZXNwYWNlIiAtfX0Ke3stIGRlZmF1bHQgLlJlbGVhc2UuTmFtZXNwYWNlIC5WYWx1ZXMubmFtZXNwYWNlT3ZlcnJpZGUgfCB0cnVuYyA2MyB8IHRyaW1TdWZmaXggIi0iIC19fQp7ey0gZW5kIH19Cgp7ey8qCkR1YWwgc3RhY2sgZGVmaW5pdGlvbgoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QuZHVhbFN0YWNrIiAtfX0Ke3stIHdpdGggLlZhbHVlcy5nbG9iYWwuZHVhbFN0YWNrLmlwRmFtaWx5UG9saWN5IH19CmlwRmFtaWx5UG9saWN5OiB7eyAuIH19Cnt7LSBlbmQgfX0Ke3stIHdpdGggLlZhbHVlcy5nbG9iYWwuZHVhbFN0YWNrLmlwRmFtaWxpZXMgfX0KaXBGYW1pbGllczoge3sgdG9ZYW1sIC4gfCBuaW5kZW50IDQgfX0Ke3stIGVuZCB9fQp7ey0gZW5kIH19Cg=="
+                older:
+                  value:
+                    templates:
+                      - name: "templates/argocd-application-controller/servicemonitor.yaml"
+                        data: "e3stIGlmIGFuZCAoLkNhcGFiaWxpdGllcy5BUElWZXJzaW9ucy5IYXMgIm1vbml0b3JpbmcuY29yZW9zLmNvbS92MSIpIC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLmVuYWJsZWQgLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3IuZW5hYmxlZCB9fQphcGlWZXJzaW9uOiBtb25pdG9yaW5nLmNvcmVvcy5jb20vdjEKa2luZDogU2VydmljZU1vbml0b3IKbWV0YWRhdGE6CiAgbmFtZToge3sgdGVtcGxhdGUgImFyZ28tY2QuY29udHJvbGxlci5mdWxsbmFtZSIgLiB9fQogIG5hbWVzcGFjZToge3sgZGVmYXVsdCAoaW5jbHVkZSAgImFyZ28tY2QubmFtZXNwYWNlIiAuKSAuVmFsdWVzLmNvbnRyb2xsZXIubWV0cmljcy5zZXJ2aWNlTW9uaXRvci5uYW1lc3BhY2UgfCBxdW90ZSB9fQogIGxhYmVsczoKICAgIHt7LSBpbmNsdWRlICJhcmdvLWNkLmxhYmVscyIgKGRpY3QgImNvbnRleHQiIC4gImNvbXBvbmVudCIgLlZhbHVlcy5jb250cm9sbGVyLm5hbWUgIm5hbWUiIC5WYWx1ZXMuY29udHJvbGxlci5uYW1lKSB8IG5pbmRlbnQgNCB9fQogICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3Iuc2VsZWN0b3IgfX0KICAgICAge3stIHRvWWFtbCAuIHwgbmluZGVudCA0IH19CiAgICB7ey0gZW5kIH19CiAgICB7ey0gd2l0aCAuVmFsdWVzLmNvbnRyb2xsZXIubWV0cmljcy5zZXJ2aWNlTW9uaXRvci5hZGRpdGlvbmFsTGFiZWxzIH19CiAgICAgIHt7LSB0b1lhbWwgLiB8IG5pbmRlbnQgNCB9fQogICAge3stIGVuZCB9fQogIHt7LSB3aXRoIC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLnNlcnZpY2VNb25pdG9yLmFubm90YXRpb25zIH19CiAgYW5ub3RhdGlvbnM6CiAgICB7ey0gdG9ZYW1sIC4gfCBuaW5kZW50IDQgfX0KICB7ey0gZW5kIH19CnNwZWM6CiAgZW5kcG9pbnRzOgogICAgLSBwb3J0OiB7eyAuVmFsdWVzLmNvbnRyb2xsZXIubWV0cmljcy5zZXJ2aWNlLnBvcnROYW1lIH19CiAgICAgIHt7LSB3aXRoIC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLnNlcnZpY2VNb25pdG9yLmludGVydmFsIH19CiAgICAgIGludGVydmFsOiB7eyAuIH19CiAgICAgIHt7LSBlbmQgfX0KICAgICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3Iuc2NyYXBlVGltZW91dCB9fQogICAgICBzY3JhcGVUaW1lb3V0OiB7eyAuIH19CiAgICAgIHt7LSBlbmQgfX0KICAgICAgcGF0aDogL21ldHJpY3MKICAgICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3IucmVsYWJlbGluZ3MgfX0KICAgICAgcmVsYWJlbGluZ3M6CiAgICAgICAge3stIHRvWWFtbCAuIHwgbmluZGVudCA4IH19CiAgICAgIHt7LSBlbmQgfX0KICAgICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3IubWV0cmljUmVsYWJlbGluZ3MgfX0KICAgICAgbWV0cmljUmVsYWJlbGluZ3M6CiAgICAgICAge3stIHRvWWFtbCAuIHwgbmluZGVudCA4IH19CiAgICAgIHt7LSBlbmQgfX0KICAgICAge3stIHdpdGggLlZhbHVlcy5jb250cm9sbGVyLm1ldHJpY3Muc2VydmljZU1vbml0b3Iuc2NoZW1lIH19CiAgICAgIHNjaGVtZToge3sgLiB9fQogICAgICB7ey0gZW5kIH19CiAgICAgIHt7LSB3aXRoIC5WYWx1ZXMuY29udHJvbGxlci5tZXRyaWNzLnNlcnZpY2VNb25pdG9yLnRsc0NvbmZpZyB9fQogICAgICB0bHNDb25maWc6CiAgICAgICAge3stIHRvWWFtbCAuIHwgbmluZGVudCA4IH19CiAgICAgIHt7LSBlbmQgfX0KICBuYW1lc3BhY2VTZWxlY3RvcjoKICAgIG1hdGNoTmFtZXM6CiAgICAgIC0ge3sgaW5jbHVkZSAiYXJnby1jZC5uYW1lc3BhY2UiIC4gfX0KICBzZWxlY3RvcjoKICAgIG1hdGNoTGFiZWxzOgogICAgICB7ey0gaW5jbHVkZSAiYXJnby1jZC5zZWxlY3RvckxhYmVscyIgKGRpY3QgImNvbnRleHQiIC4gImNvbXBvbmVudCIgLlZhbHVlcy5jb250cm9sbGVyLm5hbWUgIm5hbWUiICJtZXRyaWNzIikgfCBuaW5kZW50IDYgfX0Ke3stIGVuZCB9fQo="
+                      - name: "templates/argocd-server/clusterrole.yaml"
+                        data: "e3stIGlmIC5WYWx1ZXMuY3JlYXRlQ2x1c3RlclJvbGVzIH19CmFwaVZlcnNpb246IHJiYWMuYXV0aG9yaXphdGlvbi5rOHMuaW8vdjEKa2luZDogQ2x1c3RlclJvbGUKbWV0YWRhdGE6CiAgbmFtZToge3sgaW5jbHVkZSAiYXJnby1jZC5zZXJ2ZXIuZnVsbG5hbWUiIC4gfX0KICBsYWJlbHM6CiAgICB7ey0gaW5jbHVkZSAiYXJnby1jZC5sYWJlbHMiIChkaWN0ICJjb250ZXh0IiAuICJjb21wb25lbnQiIC5WYWx1ZXMuc2VydmVyLm5hbWUgIm5hbWUiIC5WYWx1ZXMuc2VydmVyLm5hbWUpIHwgbmluZGVudCA0IH19CnJ1bGVzOgogIHt7LSBpZiAuVmFsdWVzLnNlcnZlci5jbHVzdGVyUm9sZVJ1bGVzLmVuYWJsZWQgfX0KICAgIHt7LSB0b1lhbWwgLlZhbHVlcy5zZXJ2ZXIuY2x1c3RlclJvbGVSdWxlcy5ydWxlcyB8IG5pbmRlbnQgMiB9fQogIHt7LSBlbHNlIH19CiAgLSBhcGlHcm91cHM6CiAgICAgIC0gJyonCiAgICByZXNvdXJjZXM6CiAgICAgIC0gJyonCiAgICB2ZXJiczoKICAgICAgLSBkZWxldGUgICMgc3VwcG9ydHMgZGVsZXRpb24gYSBsaXZlIG9iamVjdCBpbiBVSQogICAgICAtIGdldCAgICAgIyBzdXBwb3J0cyB2aWV3aW5nIGxpdmUgb2JqZWN0IG1hbmlmZXN0IGluIFVJCiAgICAgIC0gcGF0Y2ggICAjIHN1cHBvcnRzIGBhcmdvY2QgYXBwIHBhdGNoYAogICAgICAtIGxpc3QgICAgIyBzdXBwb3J0cyBgYXJnb2NkIGFwcHNldCBnZW5lcmF0ZWAgd2l0aCBjbHVzdGVyIGdlbmVyYXRvcgogIC0gYXBpR3JvdXBzOgogICAgICAtICIiCiAgICByZXNvdXJjZXM6CiAgICAgIC0gZXZlbnRzCiAgICB2ZXJiczoKICAgICAgLSBsaXN0ICAgICMgc3VwcG9ydHMgbGlzdGluZyBldmVudHMgaW4gVUkKICAgICAgLSBjcmVhdGUKICAtIGFwaUdyb3VwczoKICAgICAgLSAiIgogICAgcmVzb3VyY2VzOgogICAgICAtIHBvZHMKICAgICAgLSBwb2RzL2xvZwogICAgdmVyYnM6CiAgICAgIC0gZ2V0ICAgICAjIHN1cHBvcnRzIHZpZXdpbmcgcG9kIGxvZ3MgZnJvbSBVSQogIHt7LSBpZiBlcSAodG9TdHJpbmcgKGluZGV4IC5WYWx1ZXMuY29uZmlncy5jbSAiZXhlYy5lbmFibGVkIikpICJ0cnVlIiB9fQogIC0gYXBpR3JvdXBzOgogICAgICAtICIiCiAgICByZXNvdXJjZXM6CiAgICAgIC0gcG9kcy9leGVjCiAgICB2ZXJiczoKICAgICAgLSBjcmVhdGUKICB7ey0gZW5kIH19CiAgLSBhcGlHcm91cHM6CiAgICAgIC0gYXJnb3Byb2ouaW8KICAgIHJlc291cmNlczoKICAgICAgLSBhcHBsaWNhdGlvbnMKICAgICAgLSBhcHBsaWNhdGlvbnNldHMKICAgIHZlcmJzOgogICAgICAtIGdldAogICAgICAtIGxpc3QKICAgICAgLSB1cGRhdGUKICAgICAgLSB3YXRjaAogIHt7LSBpZiAoaW5kZXggLlZhbHVlcy5jb25maWdzLnBhcmFtcyAiYXBwbGljYXRpb24ubmFtZXNwYWNlcyIpIH19CiAgLSBhcGlHcm91cHM6CiAgICAgIC0gImFyZ29wcm9qLmlvIgogICAgcmVzb3VyY2VzOgogICAgICAtICJhcHBsaWNhdGlvbnMiCiAgICB2ZXJiczoKICAgICAgLSBjcmVhdGUKICAgICAgLSBkZWxldGUKICAgICAgLSB1cGRhdGUKICAgICAgLSBwYXRjaAogIHt7LSBlbmQgfX0KICAtIGFwaUdyb3VwczoKICAgICAgLSBiYXRjaAogICAgcmVzb3VyY2VzOgogICAgICB7ey8qIHN1cHBvcnRzIHRyaWdnZXJpbmcgam9icyBmcm9tIFVJICovfX0KICAgICAgLSBqb2JzCiAgICB2ZXJiczoKICAgICAgLSBjcmVhdGUKICAtIGFwaUdyb3VwczoKICAgICAgLSBhcmdvcHJvai5pbwogICAgcmVzb3VyY2VzOgogICAgICAtIHdvcmtmbG93cwogICAgdmVyYnM6CiAgICAgIHt7Lyogc3VwcG9ydHMgdHJpZ2dlcmluZyB3b3JrZmxvd3MgZnJvbSBVSSAqL319CiAgICAgIC0gY3JlYXRlCiAge3stIGVuZCB9fQp7ey0gZW5kIH19Cg=="
+                      - name: "helpers.tpl"
+                        data: "e3svKiB2aW06IHNldCBmaWxldHlwZT1tdXN0YWNoZTogKi99fQp7ey8qCkNyZWF0ZSBjb250cm9sbGVyIG5hbWUgYW5kIHZlcnNpb24gYXMgdXNlZCBieSB0aGUgY2hhcnQgbGFiZWwuClRydW5jYXRlZCBhdCA1MiBjaGFycyBiZWNhdXNlIFN0YXRlZnVsU2V0IGxhYmVsICdjb250cm9sbGVyLXJldmlzaW9uLWhhc2gnIGlzIGxpbWl0ZWQKdG8gNjMgY2hhcnMgYW5kIGl0IGluY2x1ZGVzIDEwIGNoYXJzIG9mIGhhc2ggYW5kIGEgc2VwYXJhdGluZyAnLScuCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb250cm9sbGVyLmZ1bGxuYW1lIiAtfX0Ke3stIHByaW50ZiAiJXMtJXMiIChpbmNsdWRlICJhcmdvLWNkLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLmNvbnRyb2xsZXIubmFtZSB8IHRydW5jIDUyIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSB0aGUgbmFtZSBvZiB0aGUgY29udHJvbGxlciBzZXJ2aWNlIGFjY291bnQgdG8gdXNlCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb250cm9sbGVyLnNlcnZpY2VBY2NvdW50TmFtZSIgLX19Cnt7LSBpZiAuVmFsdWVzLmNvbnRyb2xsZXIuc2VydmljZUFjY291bnQuY3JlYXRlIC19fQogICAge3sgZGVmYXVsdCAoaW5jbHVkZSAiYXJnby1jZC5jb250cm9sbGVyLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLmNvbnRyb2xsZXIuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZWxzZSAtfX0KICAgIHt7IGRlZmF1bHQgImRlZmF1bHQiIC5WYWx1ZXMuY29udHJvbGxlci5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbmQgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSBkZXggbmFtZSBhbmQgdmVyc2lvbiBhcyB1c2VkIGJ5IHRoZSBjaGFydCBsYWJlbC4KKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLmRleC5mdWxsbmFtZSIgLX19Cnt7LSBwcmludGYgIiVzLSVzIiAoaW5jbHVkZSAiYXJnby1jZC5mdWxsbmFtZSIgLikgLlZhbHVlcy5kZXgubmFtZSB8IHRydW5jIDYzIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSBEZXggc2VydmVyIGVuZHBvaW50CiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5kZXguc2VydmVyIiAtfX0Ke3stICRpbnNlY3VyZSA6PSBpbmRleCAuVmFsdWVzLmNvbmZpZ3MucGFyYW1zICJkZXhzZXJ2ZXIuZGlzYWJsZS50bHMiIHwgdG9TdHJpbmcgLX19Cnt7LSAkc2NoZW1lIDo9IChlcSAkaW5zZWN1cmUgInRydWUiKSB8IHRlcm5hcnkgImh0dHAiICJodHRwcyIgLX19Cnt7LSAkaG9zdCA6PSBpbmNsdWRlICJhcmdvLWNkLmRleC5mdWxsbmFtZSIgLiAtfX0Ke3stICRwb3J0IDo9IGludCAuVmFsdWVzLmRleC5zZXJ2aWNlUG9ydEh0dHAgLX19Cnt7LSBwcmludGYgIiVzOi8vJXM6JWQiICRzY2hlbWUgJGhvc3QgJHBvcnQgfX0Ke3stIGVuZCB9fQoKe3svKgpDcmVhdGUgdGhlIG5hbWUgb2YgdGhlIGRleCBzZXJ2aWNlIGFjY291bnQgdG8gdXNlCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5kZXguc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMuZGV4LnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2QuZGV4LmZ1bGxuYW1lIiAuKSAuVmFsdWVzLmRleC5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5kZXguc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgcmVkaXMgbmFtZSBhbmQgdmVyc2lvbiBhcyB1c2VkIGJ5IHRoZSBjaGFydCBsYWJlbC4KKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLnJlZGlzLmZ1bGxuYW1lIiAtfX0Ke3stICRyZWRpc0hhIDo9IChpbmRleCAuVmFsdWVzICJyZWRpcy1oYSIpIC19fQp7ey0gJHJlZGlzSGFDb250ZXh0IDo9IGRpY3QgIkNoYXJ0IiAoZGljdCAiTmFtZSIgInJlZGlzLWhhIikgIlJlbGVhc2UiIC5SZWxlYXNlICJWYWx1ZXMiICRyZWRpc0hhIC19fQp7ey0gaWYgJHJlZGlzSGEuZW5hYmxlZCAtfX0KICAgIHt7LSBpZiAkcmVkaXNIYS5oYXByb3h5LmVuYWJsZWQgLX19CiAgICAgICAge3stIHByaW50ZiAiJXMtaGFwcm94eSIgKGluY2x1ZGUgInJlZGlzLWhhLmZ1bGxuYW1lIiAkcmVkaXNIYUNvbnRleHQpIHwgdHJ1bmMgNjMgfCB0cmltU3VmZml4ICItIiAtfX0KICAgIHt7LSBlbmQgLX19Cnt7LSBlbHNlIC19fQp7ey0gcHJpbnRmICIlcy0lcyIgKGluY2x1ZGUgImFyZ28tY2QuZnVsbG5hbWUiIC4pIC5WYWx1ZXMucmVkaXMubmFtZSB8IHRydW5jIDYzIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cnt7LSBlbmQgLX19Cgp7ey8qClJldHVybiBSZWRpcyBzZXJ2ZXIgZW5kcG9pbnQKKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLnJlZGlzLnNlcnZlciIgLX19Cnt7LSAkcmVkaXNIYSA6PSAoaW5kZXggLlZhbHVlcyAicmVkaXMtaGEiKSAtfX0Ke3stIGlmIG9yIChhbmQgLlZhbHVlcy5yZWRpcy5lbmFibGVkIChub3QgJHJlZGlzSGEuZW5hYmxlZCkpIChhbmQgJHJlZGlzSGEuZW5hYmxlZCAkcmVkaXNIYS5oYXByb3h5LmVuYWJsZWQpIH19CiAgICB7ey0gcHJpbnRmICIlczolcyIgKGluY2x1ZGUgImFyZ28tY2QucmVkaXMuZnVsbG5hbWUiIC4pICAodG9TdHJpbmcgLlZhbHVlcy5yZWRpcy5zZXJ2aWNlUG9ydCkgfX0Ke3stIGVsc2UgaWYgYW5kIC5WYWx1ZXMuZXh0ZXJuYWxSZWRpcy5ob3N0IC5WYWx1ZXMuZXh0ZXJuYWxSZWRpcy5wb3J0IH19CiAgICB7ey0gcHJpbnRmICIlczolcyIgLlZhbHVlcy5leHRlcm5hbFJlZGlzLmhvc3QgKHRvU3RyaW5nIC5WYWx1ZXMuZXh0ZXJuYWxSZWRpcy5wb3J0KSB9fQp7ey0gZW5kIH19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSB0aGUgbmFtZSBvZiB0aGUgcmVkaXMgc2VydmljZSBhY2NvdW50IHRvIHVzZQoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QucmVkaXMuc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMucmVkaXMuc2VydmljZUFjY291bnQuY3JlYXRlIC19fQogICAge3sgZGVmYXVsdCAoaW5jbHVkZSAiYXJnby1jZC5yZWRpcy5mdWxsbmFtZSIgLikgLlZhbHVlcy5yZWRpcy5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5yZWRpcy5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbmQgLX19Cnt7LSBlbmQgLX19CgoKe3svKgpDcmVhdGUgUmVkaXMgc2VjcmV0LWluaXQgbmFtZQoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QucmVkaXNTZWNyZXRJbml0LmZ1bGxuYW1lIiAtfX0Ke3stIHByaW50ZiAiJXMtJXMiIChpbmNsdWRlICJhcmdvLWNkLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnJlZGlzU2VjcmV0SW5pdC5uYW1lIHwgdHJ1bmMgNjMgfCB0cmltU3VmZml4ICItIiAtfX0Ke3stIGVuZCAtfX0KCnt7LyoKQ3JlYXRlIHRoZSBuYW1lIG9mIHRoZSBSZWRpcyBzZWNyZXQtaW5pdCBzZXJ2aWNlIGFjY291bnQgdG8gdXNlCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5yZWRpc1NlY3JldEluaXQuc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMucmVkaXNTZWNyZXRJbml0LnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2QucmVkaXNTZWNyZXRJbml0LmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnJlZGlzU2VjcmV0SW5pdC5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5yZWRpc1NlY3JldEluaXQuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgYXJnb2NkIHNlcnZlciBuYW1lIGFuZCB2ZXJzaW9uIGFzIHVzZWQgYnkgdGhlIGNoYXJ0IGxhYmVsLgoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2Quc2VydmVyLmZ1bGxuYW1lIiAtfX0Ke3stIHByaW50ZiAiJXMtJXMiIChpbmNsdWRlICJhcmdvLWNkLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnNlcnZlci5uYW1lIHwgdHJ1bmMgNjMgfCB0cmltU3VmZml4ICItIiAtfX0Ke3stIGVuZCAtfX0KCnt7LyoKQ3JlYXRlIHRoZSBuYW1lIG9mIHRoZSBBcmdvIENEIHNlcnZlciBzZXJ2aWNlIGFjY291bnQgdG8gdXNlCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5zZXJ2ZXIuc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMuc2VydmVyLnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2Quc2VydmVyLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnNlcnZlci5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5zZXJ2ZXIuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgYXJnb2NkIHJlcG8tc2VydmVyIG5hbWUgYW5kIHZlcnNpb24gYXMgdXNlZCBieSB0aGUgY2hhcnQgbGFiZWwuCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5yZXBvU2VydmVyLmZ1bGxuYW1lIiAtfX0Ke3stIHByaW50ZiAiJXMtJXMiIChpbmNsdWRlICJhcmdvLWNkLmZ1bGxuYW1lIiAuKSAuVmFsdWVzLnJlcG9TZXJ2ZXIubmFtZSB8IHRydW5jIDYzIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSB0aGUgbmFtZSBvZiB0aGUgcmVwby1zZXJ2ZXIgc2VydmljZSBhY2NvdW50IHRvIHVzZQoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QucmVwb1NlcnZlci5zZXJ2aWNlQWNjb3VudE5hbWUiIC19fQp7ey0gaWYgLlZhbHVlcy5yZXBvU2VydmVyLnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2QucmVwb1NlcnZlci5mdWxsbmFtZSIgLikgLlZhbHVlcy5yZXBvU2VydmVyLnNlcnZpY2VBY2NvdW50Lm5hbWUgfX0Ke3stIGVsc2UgLX19CiAgICB7eyBkZWZhdWx0ICJkZWZhdWx0IiAuVmFsdWVzLnJlcG9TZXJ2ZXIuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgYXJnb2NkIGFwcGxpY2F0aW9uIHNldCBuYW1lIGFuZCB2ZXJzaW9uIGFzIHVzZWQgYnkgdGhlIGNoYXJ0IGxhYmVsLgoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QuYXBwbGljYXRpb25TZXQuZnVsbG5hbWUiIC19fQp7ey0gcHJpbnRmICIlcy0lcyIgKGluY2x1ZGUgImFyZ28tY2QuZnVsbG5hbWUiIC4pIC5WYWx1ZXMuYXBwbGljYXRpb25TZXQubmFtZSB8IHRydW5jIDYzIHwgdHJpbVN1ZmZpeCAiLSIgLX19Cnt7LSBlbmQgLX19Cgp7ey8qCkNyZWF0ZSB0aGUgbmFtZSBvZiB0aGUgYXBwbGljYXRpb24gc2V0IHNlcnZpY2UgYWNjb3VudCB0byB1c2UKKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLmFwcGxpY2F0aW9uU2V0LnNlcnZpY2VBY2NvdW50TmFtZSIgLX19Cnt7LSBpZiAuVmFsdWVzLmFwcGxpY2F0aW9uU2V0LnNlcnZpY2VBY2NvdW50LmNyZWF0ZSAtfX0KICAgIHt7IGRlZmF1bHQgKGluY2x1ZGUgImFyZ28tY2QuYXBwbGljYXRpb25TZXQuZnVsbG5hbWUiIC4pIC5WYWx1ZXMuYXBwbGljYXRpb25TZXQuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZWxzZSAtfX0KICAgIHt7IGRlZmF1bHQgImRlZmF1bHQiIC5WYWx1ZXMuYXBwbGljYXRpb25TZXQuc2VydmljZUFjY291bnQubmFtZSB9fQp7ey0gZW5kIC19fQp7ey0gZW5kIC19fQoKe3svKgpDcmVhdGUgYXJnb2NkIG5vdGlmaWNhdGlvbnMgbmFtZSBhbmQgdmVyc2lvbiBhcyB1c2VkIGJ5IHRoZSBjaGFydCBsYWJlbC4KKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLm5vdGlmaWNhdGlvbnMuZnVsbG5hbWUiIC19fQp7ey0gcHJpbnRmICIlcy0lcyIgKGluY2x1ZGUgImFyZ28tY2QuZnVsbG5hbWUiIC4pIC5WYWx1ZXMubm90aWZpY2F0aW9ucy5uYW1lIHwgdHJ1bmMgNjMgfCB0cmltU3VmZml4ICItIiAtfX0Ke3stIGVuZCAtfX0KCnt7LyoKQ3JlYXRlIHRoZSBuYW1lIG9mIHRoZSBub3RpZmljYXRpb25zIHNlcnZpY2UgYWNjb3VudCB0byB1c2UKKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLm5vdGlmaWNhdGlvbnMuc2VydmljZUFjY291bnROYW1lIiAtfX0Ke3stIGlmIC5WYWx1ZXMubm90aWZpY2F0aW9ucy5zZXJ2aWNlQWNjb3VudC5jcmVhdGUgLX19CiAgICB7eyBkZWZhdWx0IChpbmNsdWRlICJhcmdvLWNkLm5vdGlmaWNhdGlvbnMuZnVsbG5hbWUiIC4pIC5WYWx1ZXMubm90aWZpY2F0aW9ucy5zZXJ2aWNlQWNjb3VudC5uYW1lIH19Cnt7LSBlbHNlIC19fQogICAge3sgZGVmYXVsdCAiZGVmYXVsdCIgLlZhbHVlcy5ub3RpZmljYXRpb25zLnNlcnZpY2VBY2NvdW50Lm5hbWUgfX0Ke3stIGVuZCAtfX0Ke3stIGVuZCAtfX0KCnt7LyoKQXJnbyBDb25maWd1cmF0aW9uIFByZXNldCBWYWx1ZXMgKEluZmx1ZW5jZWQgYnkgVmFsdWVzIGNvbmZpZ3VyYXRpb24pCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb25maWcuY20ucHJlc2V0cyIgLX19Cnt7LSAkcHJlc2V0cyA6PSBkaWN0IC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzICJ1cmwiIChwcmludGYgImh0dHBzOi8vJXMiIC5WYWx1ZXMuZ2xvYmFsLmRvbWFpbikgLX19Cnt7LSBpZiBlcSAodG9TdHJpbmcgKGluZGV4IC5WYWx1ZXMuY29uZmlncy5jbSAic3RhdHVzYmFkZ2UuZW5hYmxlZCIpKSAidHJ1ZSIgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgInN0YXR1c2JhZGdlLnVybCIgKHByaW50ZiAiaHR0cHM6Ly8lcy8iIC5WYWx1ZXMuZ2xvYmFsLmRvbWFpbikgLX19Cnt7LSBlbmQgLX19Cnt7LSBpZiAuVmFsdWVzLmNvbmZpZ3Muc3R5bGVzIC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzICJ1aS5jc3N1cmwiICIuL2N1c3RvbS9jdXN0b20uc3R5bGVzLmNzcyIgLX19Cnt7LSBlbmQgLX19Cnt7LSB0b1lhbWwgJHByZXNldHMgfX0Ke3stIGVuZCAtfX0KCnt7LyoKTWVyZ2UgQXJnbyBDb25maWd1cmF0aW9uIHdpdGggUHJlc2V0IENvbmZpZ3VyYXRpb24KKi99fQp7ey0gZGVmaW5lICJhcmdvLWNkLmNvbmZpZy5jbSIgLX19Cnt7LSAkY29uZmlnIDo9IG9taXQgLlZhbHVlcy5jb25maWdzLmNtICJjcmVhdGUiICJhbm5vdGF0aW9ucyIgLX19Cnt7LSAkcHJlc2V0IDo9IGluY2x1ZGUgImFyZ28tY2QuY29uZmlnLmNtLnByZXNldHMiIC4gfCBmcm9tWWFtbCB8IGRlZmF1bHQgZGljdCAtfX0Ke3stIHJhbmdlICRrZXksICR2YWx1ZSA6PSBtZXJnZU92ZXJ3cml0ZSAkcHJlc2V0ICRjb25maWcgfX0Ke3stICRmbXRlZCA6PSAkdmFsdWUgfCB0b1N0cmluZyB9fQp7ey0gaWYgbm90IChlcSAkZm10ZWQgIiIpIH19Cnt7ICRrZXkgfX06IHt7ICRmbXRlZCB8IHRvWWFtbCB9fQp7ey0gZW5kIH19Cnt7LSBlbmQgfX0Ke3stIGVuZCAtfX0KCnt7LyoKQXJnbyBQYXJhbXMgRGVmYXVsdCBDb25maWd1cmF0aW9uIFByZXNldHMKTk9URTogQ29uZmlndXJhdGlvbiBrZXlzIG11c3QgYmUgc3RvcmVkIGFzIGRpY3QgYmVjYXVzZSBZQU1MIHRyZWF0cyBkb3QgYXMgc2VwYXJhdG9yCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb25maWcucGFyYW1zLnByZXNldHMiIC19fQp7ey0gJHByZXNldHMgOj0gZGljdCAtfX0Ke3stICRfIDo9IHNldCAkcHJlc2V0cyAicmVwby5zZXJ2ZXIiIChwcmludGYgIiVzOiVzIiAoaW5jbHVkZSAiYXJnby1jZC5yZXBvU2VydmVyLmZ1bGxuYW1lIiAuKSAoLlZhbHVlcy5yZXBvU2VydmVyLnNlcnZpY2UucG9ydCB8IHRvU3RyaW5nKSkgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgInNlcnZlci5yZXBvLnNlcnZlci5zdHJpY3QudGxzIiAoLlZhbHVlcy5yZXBvU2VydmVyLmNlcnRpZmljYXRlU2VjcmV0LmVuYWJsZWQgfCB0b1N0cmluZyApIC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzICJyZWRpcy5zZXJ2ZXIiIChpbmNsdWRlICJhcmdvLWNkLnJlZGlzLnNlcnZlciIgLikgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgImFwcGxpY2F0aW9uc2V0Y29udHJvbGxlci5lbmFibGUubGVhZGVyLmVsZWN0aW9uIiAoZ3QgKCguVmFsdWVzLmFwcGxpY2F0aW9uU2V0LnJlcGxpY2FzIHwgZGVmYXVsdCAuVmFsdWVzLmFwcGxpY2F0aW9uU2V0LnJlcGxpY2FDb3VudCkgfCBpbnQ2NCkgMSkgLX19Cnt7LSBpZiAuVmFsdWVzLmRleC5lbmFibGVkIC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzICJzZXJ2ZXIuZGV4LnNlcnZlciIgKGluY2x1ZGUgImFyZ28tY2QuZGV4LnNlcnZlciIgLikgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgInNlcnZlci5kZXguc2VydmVyLnN0cmljdC50bHMiIC5WYWx1ZXMuZGV4LmNlcnRpZmljYXRlU2VjcmV0LmVuYWJsZWQgLX19Cnt7LSBlbmQgLX19Cnt7LSByYW5nZSAkY29tcG9uZW50IDo9IHR1cGxlICJhcHBsaWNhdGlvbnNldGNvbnRyb2xsZXIiICJjb250cm9sbGVyIiAic2VydmVyIiAicmVwb3NlcnZlciIgLX19Cnt7LSAkXyA6PSBzZXQgJHByZXNldHMgKHByaW50ZiAiJXMubG9nLmZvcm1hdCIgJGNvbXBvbmVudCkgJC5WYWx1ZXMuZ2xvYmFsLmxvZ2dpbmcuZm9ybWF0IC19fQp7ey0gJF8gOj0gc2V0ICRwcmVzZXRzIChwcmludGYgIiVzLmxvZy5sZXZlbCIgJGNvbXBvbmVudCkgJC5WYWx1ZXMuZ2xvYmFsLmxvZ2dpbmcubGV2ZWwgLX19Cnt7LSBlbmQgLX19Cnt7LSB0b1lhbWwgJHByZXNldHMgfX0Ke3stIGVuZCAtfX0KCnt7LyoKTWVyZ2UgQXJnbyBQYXJhbXMgQ29uZmlndXJhdGlvbiB3aXRoIFByZXNldCBDb25maWd1cmF0aW9uCiovfX0Ke3stIGRlZmluZSAiYXJnby1jZC5jb25maWcucGFyYW1zIiAtfX0Ke3stICRjb25maWcgOj0gb21pdCAuVmFsdWVzLmNvbmZpZ3MucGFyYW1zICJjcmVhdGUiICJhbm5vdGF0aW9ucyIgfX0Ke3stICRwcmVzZXQgOj0gaW5jbHVkZSAiYXJnby1jZC5jb25maWcucGFyYW1zLnByZXNldHMiIC4gfCBmcm9tWWFtbCB8IGRlZmF1bHQgZGljdCAtfX0Ke3stIHJhbmdlICRrZXksICR2YWx1ZSA6PSBtZXJnZU92ZXJ3cml0ZSAkcHJlc2V0ICRjb25maWcgfX0Ke3sgJGtleSB9fToge3sgdG9TdHJpbmcgJHZhbHVlIHwgdG9ZYW1sIH19Cnt7LSBlbmQgfX0Ke3stIGVuZCAtfX0KCnt7LyoKRXhwYW5kIHRoZSBuYW1lc3BhY2Ugb2YgdGhlIHJlbGVhc2UuCkFsbG93cyBvdmVycmlkaW5nIGl0IGZvciBtdWx0aS1uYW1lc3BhY2UgZGVwbG95bWVudHMgaW4gY29tYmluZWQgY2hhcnRzLgoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QubmFtZXNwYWNlIiAtfX0Ke3stIGRlZmF1bHQgLlJlbGVhc2UuTmFtZXNwYWNlIC5WYWx1ZXMubmFtZXNwYWNlT3ZlcnJpZGUgfCB0cnVuYyA2MyB8IHRyaW1TdWZmaXggIi0iIC19fQp7ey0gZW5kIH19Cgp7ey8qCkR1YWwgc3RhY2sgZGVmaW5pdGlvbgoqL319Cnt7LSBkZWZpbmUgImFyZ28tY2QuZHVhbFN0YWNrIiAtfX0Ke3stIHdpdGggLlZhbHVlcy5nbG9iYWwuZHVhbFN0YWNrLmlwRmFtaWx5UG9saWN5IH19CmlwRmFtaWx5UG9saWN5OiB7eyAuIH19Cnt7LSBlbmQgfX0Ke3stIHdpdGggLlZhbHVlcy5nbG9iYWwuZHVhbFN0YWNrLmlwRmFtaWxpZXMgfX0KaXBGYW1pbGllczoge3sgdG9ZYW1sIC4gfCBuaW5kZW50IDQgfX0Ke3stIGVuZCB9fQp7ey0gZW5kIH19Cg=="
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+
+  /clients/{client_id}/clusters/{cluster_id}/internal_applications:
+    get:
+      summary: Retrieves a list of all internal applications installed on a specified Kubernetes cluster. Allows filtering by namespace.
+      description: Fetches details of all internal applications installed within the specified Kubernetes cluster associated with the authenticated client. Used mainly for Single Cluster View. Supports an optional query parameter for namespace to allow users to filter the results based on the namespace.
+      operationId: getInternalApplications
+      tags:
+      - Internal Applications
+      x-consumers:
+      - frontend
+      x-cached: true
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      - name: namespaces
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filters the internal applications by the specified namespaces.
+      - name: external_applications
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filters the internal applications by the specified external applications.
+      responses:
+        '200':
+          description: A list of internal applications.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "1"
+                        name:
+                          type: string
+                          example: "argo"
+                        namespace:
+                          type: string
+                          example: "argo-cd"
+                        cluster_name:
+                          type: string
+                          example: "customer_cluster1"
+                        version:
+                          type: string
+                          example: "1.0.0"
+                        external_application:
+                          type: string
+                          example: "ArgoCD"
+                        external_version:
+                          type: string
+                          example: "2.1.0"
+                        deprecation_status:
+                          type: string
+                          example: "latest"
+              example:
+                applications:
+                - id: "1"
+                  name: "argo-cluster1"
+                  namespace: "argo-cd"
+                  version: "2.1.0"
+                  external_version: "2.2.0"
+                  external_application: "argocd"
+                  deprecation_status: "latest"
+                - id: "2"
+                  name: "kyverno"
+                  namespace: "kyverno"
+                  version: "1.2.1"
+                  external_version: "1.3.0"
+                  external_application: "kyverno"
+                - id: "3"
+                  name: "kube-prometheus-stack"
+                  namespace: "kube-prometheus"
+                  version: "3.4.5"
+                  external_version: "3.5.1"
+                  external_application: "kube-prometheus"
+                  deprecation_status: "deprecated"
+                - id: "4"
+                  name: "keda"
+                  namespace: "keda-system"
+                  version: "1.4.1"
+                  external_version: "1.5.3"
+                  external_application: "keda"
+                - id: "5"
+                  name: "external-dns"
+                  namespace: "dns"
+                  version: "0.2.9"
+                  external_version: "1.6.3"
+                  external_application: "external-dns"
+                  deprecation_status: "latest"
+                - id: "6"
+                  name: "external-secrets"
+                  namespace: "secrets"
+                  version: "1.2.2"
+                  external_version: "1.67.0"
+                  external_application: "external-secrets"
+                  deprecation_status: "latest"
+                - id: "7"
+                  name: "calico-tigera-operator"
+                  namespace: "network-namespace"
+                  version: "1.2.1"
+                  external_version: "2.1.0"
+                  external_application: "calico"
+                  deprecation_status: "supported"
+                - id: "8"
+                  name: "grafana"
+                  namespace: "monitoring"
+                  version: "34.0.7"
+                  external_version: "44.2.0"
+                  external_application: "grafana"
+                  deprecation_status: "supported"
+                - id: "9"
+                  name: "crowdstrike"
+                  namespace: "security"
+                  version: "1.0.1"
+                  external_version: "1.3.0"
+                  external_application: "crowdstrike"
+                  deprecation_status: "deprecated"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+    post:
+      summary: Creates a new internal application entry.
+      tags:
+      - Internal Applications
+      x-consumers:
+      - cluster_monitor
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/InternalApplication"
+      responses:
+        '201':
+          description: Internal Application created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: The unique identifier of the created internal application.
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the internal application was created.
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+
+  /clients/{client_id}/clusters/{cluster_id}/internal_applications/{internal_application_id}/versions:
+    post:
+      summary: Creates a new version of an internal application.
+      description: Creates a new version of an internal application.
+      tags:
+      - Internal Applications
+      x-consumers:
+      - cluster_monitor
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      - "$ref": "#/components/parameters/InternalApplicationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/InternalApplicationVersion"
+      responses:
+        '201':
+          description: Internal Application Version created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: The unique identifier of the created internal application version.
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the internal application version was created.
+              examples:
+                versionCreated:
+                  summary: Success
+                  value:
+                    id: "1"
+                    created_at: "2025-03-01T12:34:56Z"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+
+  /clients/{client_id}/clusters/{cluster_id}/external_applications:
+    get:
+      tags:
+        - External Applications
+      summary: Retrieves a list of all external applications installed on a specified Kubernetes cluster.
+      description: Fetches the names of all external applications installed within the specified Kubernetes cluster associated with the authenticated client. Used mainly for configuring dashboards and providing a filterable dropdown of applications.
+      operationId: getExternalApplications
+      x-consumers:
+      - frontend
+      x-cached: true
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      responses:
+        '200':
+          description: A list of external applications.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "argocd"
+                example:
+                  applications:
+                    - name: "argocd"
+                    - name: "kyverno"
+                    - name: "kube-prometheus"
+                    - name: "keda"
+                    - name: "external-dns"
+                    - name: "external-secrets"
+                    - name: "calico"
+                    - name: "grafana"
+                    - name: "crowdstrike"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+
+  /external_applications:
+    get:
+      tags:
+        - External Applications
+      x-consumers:
+        - external_application_version_tracker
+      x-cached: true
+      summary: Retrieves a list of all external applications.
+      description: Fetches details of all external applications stored within the system. It provides a quick overview by listing each application's name and unique identifier.
+      operationId: getAllExternalApplications
+      parameters: []
+      responses:
+        '200':
+          description: A list of all external applications in the system.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The unique identifier of the application.
+                        name:
+                          type: string
+                          description: The name of the application.
+              example:
+                applications:
+                  - id: "1"
+                    name: "jaeger"
+                  - id: "3"
+                    name: "argocd"
+                  - id: "5"
+                    name: "ingress-nginx"
+                  - id: "8"
+                    name: "elasticsearch"
+                  - id: "10"
+                    name: "filebeat"
+                  - id: "12"
+                    name: "rabbitmq"
+                  - id: "13"
+                    name: "mysql"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+    post:
+      tags:
+        - External Applications
+      x-consumers:
+        - external_application_discoverer
+      summary: Creates a new external application entry.
+      operationId: createExternalApplication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ExternalApplication"
+      responses:
+        '201':
+          description: Internal Application Version created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: The unique identifier of the created external application.
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the external application version was created.
+              examples:
+                versionCreated:
+                  summary: Success
+                  value:
+                    id: "1"
+                    created_at: "2025-03-01T12:34:56Z"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"

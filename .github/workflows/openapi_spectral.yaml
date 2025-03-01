@@ -1,0 +1,32 @@
+name: OpenAPI Spectral Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**/openapi.yaml'
+
+jobs:
+  spectral-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Spectral
+        run: npm install -g @stoplight/spectral
+        
+      - name: Find OpenAPI file
+        id: filepath
+        run: |
+          path=$(dirname $(find . -name 'openapi.yaml'))
+          echo "PATH_TO_OPENAPI_FILE=$path" >> $GITHUB_ENV
+
+      - name: Run Spectral Lint
+        run: spectral lint ${{ env.PATH_TO_OPENAPI_FILE }}/openapi.yaml -r ${{ env.PATH_TO_OPENAPI_FILE }}/.spectral.yaml

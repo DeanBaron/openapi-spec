@@ -1,0 +1,88 @@
+documentationUrl: https://github.com/adidas/api-guidelines/blob/master/ruleset.md
+rules:
+
+  paths-snake-case:
+    description: All YAML/JSON paths MUST follow snake_case
+    severity: error
+    recommended: true
+    message: "{{property}} is not snake_case: {{error}}"
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^\/([a-z0-9]+(_[a-z0-9]+)*)?(\/[a-z0-9]+(_[a-z0-9]+)*|\/{.+})*$"
+
+  path-parameters-snake-case-alphanumeric:
+    description: Path parameters MUST follow snake_case
+    severity: error
+    recommended: true
+    message: "{{property}} path parameter is not snake_case: {{error}}"
+    given: $..parameters[?(@.in == 'path')].name
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z0-9]+(_[a-z0-9]+)*$"
+
+  request-GET-no-body:
+    description: "A 'GET' request MUST NOT accept a 'body` parameter"
+    severity: error
+    given: $.paths..get.parameters..in
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "/^body$/"
+
+  headers-no-x-headers:
+    description: "All 'HTTP' headers SHOULD NOT include 'X-' headers (https://tools.ietf.org/html/rfc6648)."
+    severity: warn
+    given: "$..parameters[?(@.in == 'header')].name"
+    message: "HTTP headers SHOULD NOT include 'X-' prefix."
+    recommended: true
+    type: style
+    then: 
+      function: pattern
+      functionOptions:
+        notMatch: "/^(x|X)-/"
+
+  headers-hyphenated-pascal-case:
+    description: All `HTTP` headers MUST use `Hyphenated-Pascal-Case` notation
+    severity: error
+    given: "$..parameters[?(@.in == 'header')].name"
+    message: "'HTTP' headers MUST follow 'Hyphenated-Pascal-Case' notation"
+    recommended: true
+    type: style
+    then: 
+      function: pattern
+      functionOptions:
+        match: "/^([A-Z][a-z0-9]-)*([A-Z][a-z0-9])+/"
+
+  request-support-json:
+    description: Every request MUST support `application/json` media type
+    recommended: true
+    severity: error
+    message: "{{description}}: {{error}}"
+    given: $.paths.[*].requestBody.content[?(@property.indexOf('json') === -1)]^
+    then:
+      function: falsy
+
+  protocol-https-only:
+    description: "ALL requests MUST go through `https` protocol only"
+    recommended: true
+    severity: error
+    message: "Servers MUST be https and no other protocol is allowed."
+    given: $.servers..url
+    then:
+      function: pattern
+      functionOptions:
+        match: "/^https:/"
+
+  # # Will want to implement later on
+  # ensure-operation-examples:
+  #   description: Every operation must include an example in its responses
+  #   severity: error
+  #   recommended: true
+  #   message: "The operation '{{path}}' does not include an example in its responses."
+  #   given: $.paths[*][*].responses[*].content.application/json
+  #   then:
+  #     field: example
+  #     function: truthy

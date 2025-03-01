@@ -1,0 +1,596 @@
+---
+openapi: 3.0.0
+info:
+  title: Kubernetes Dependency Management API
+  version: 1.0.0
+  description: API documentation for Kubernetes Dependency Management
+  contact:
+    name: Your Name
+    email: your.email@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+- url: http://localhost:{port}/api/v1
+  description: Local Development Server
+  variables:
+    port:
+      default: '3000'
+      description: Local port number
+tags:
+- name: Auth
+  description: Endpoints for authentication (login, token validation, etc.)
+- name: Clusters
+  description: Endpoints for managing and retrieving cluster data
+- name: Internal Applications
+  description: Endpoints to handle internal applications within a cluster
+- name: External Applications
+  description: Endpoints to handle external applications (versions, configs, etc.)
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    StandardErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Validation Error
+        details:
+          type: string
+          example: Missing or invalid fields.
+    AuthLoginBody:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: testuser@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+    Client:
+      type: object
+      required:
+      - id
+      - name
+      - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+    Cluster:
+      type: object
+      required:
+      - id
+      - client_id
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        region:
+          type: string
+        version:
+          type: string
+        deployment_type:
+          type: string
+    Namespace:
+      type: object
+      required:
+      - id
+      - name
+      - cluster_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        cluster_id:
+          type: string
+          format: uuid
+    ExternalApplication:
+      type: object
+      required:
+      - id
+      - name
+      - latest_version
+      - git_url
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        latest_version:
+          type: string
+        git_url:
+          type: string
+          format: uri
+        git_chart_path:
+          type: string
+          nullable: true
+        git_changelog_path:
+          type: string
+          nullable: true
+        helm_repository_url:
+          type: string
+          format: uri
+          nullable: true
+        helm_package_name:
+          type: string
+          nullable: true
+        artifacthub_repository_name:
+          type: string
+          nullable: true
+        artifacthub_package_name:
+          type: string
+          nullable: true
+        eol_date:
+          type: string
+          format: date
+          nullable: true
+        eos_days:
+          type: integer
+          nullable: true
+        eos_count:
+          type: integer
+          nullable: true
+        maintainers:
+          type: array
+          items:
+            type: string
+        dependencies:
+          type: array
+          items:
+            type: string
+        icon_url:
+          type: string
+          format: uri
+          nullable: true
+    ExternalApplicationVersion:
+      type: object
+      required:
+      - id
+      - external_application_id
+      - label
+      - changes
+      - release_date
+      properties:
+        id:
+          type: string
+          format: uuid
+        external_application_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        changes:
+          type: string
+        release_date:
+          type: string
+          format: date
+    InternalApplication:
+      type: object
+      required:
+      - id
+      - namespace_id
+      - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        namespace_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        version:
+          type: string
+          nullable: true
+        external_application_id:
+          type: string
+          format: uuid
+          nullable: true
+    InternalApplicationVersion:
+      type: object
+      required:
+      - id
+      - internal_application_id
+      - label
+      properties:
+        id:
+          type: string
+          format: uuid
+        internal_application_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+    Subscription:
+      type: object
+      required:
+      - id
+      - client_id
+      - plan_name
+      - start_date
+      - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        plan_name:
+          type: string
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+          - canceled
+  parameters:
+    ClientId:
+      name: client_id
+      in: path
+      required: true
+      description: Unique identifier for the client
+      schema:
+        type: string
+        format: uuid
+    ClusterId:
+      name: cluster_id
+      in: path
+      required: true
+      description: Unique identifier for the cluster
+      schema:
+        type: string
+        format: uuid
+    InternalApplicationId:
+      name: internal_application_id
+      in: path
+      required: true
+      description: Unique identifier for the internal application
+      schema:
+        type: string
+        format: uuid
+    ExternalApplicationId:
+      name: external_application_id
+      in: path
+      required: true
+      description: Unique identifier for the internal application
+      schema:
+        type: string
+    VersionId:
+      name: version_id
+      in: path
+      required: true
+      description: Identifier for the specific version of an application
+      schema:
+        type: string
+    AuthMeHeader:
+      name: Authorization
+      in: header
+      required: true
+      description: Bearer {JWT token}
+      schema:
+        type: string
+        example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+  responses:
+    BadRequestError:
+      description: Bad Request / Validation Error
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/StandardErrorResponse"
+          example:
+            error: Validation Error
+            details: Missing or invalid fields
+    UnauthorizedError:
+      description: Unauthorized / Invalid or missing credentials
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/StandardErrorResponse"
+          example:
+            error: Unauthorized
+            details: Token missing or invalid
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/StandardErrorResponse"
+          example:
+            error: Resource not found
+            details: No resource matching the given criteria
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            "$ref": "#/components/schemas/StandardErrorResponse"
+          example:
+            error: Internal server error
+security:
+- BearerAuth: []
+paths:
+  /clients/{client_id}/all_clusters/namespaces:
+    get:
+      summary: Retrieves all namespaces across all clusters for a specific client
+      tags:
+      - Clusters
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - in: query
+        name: cluster_id
+        required: false
+        schema:
+          type: string
+        description: Filter the results to include only namespaces from the specified cluster(s)
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: A list of namespaces across all clusters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  namespaces:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The namespace ID
+                        name:
+                          type: string
+                          description: The namespace name
+                        cluster_name:
+                          type: string
+                          description: The cluster name
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  /clients/{client_id}/all_clusters/applications/{external_application_id}/instances:
+    get:
+      summary: Retrieves all instances of a specific external application across all clusters for a client
+      tags:
+      - Clusters
+      x-consumers:
+        - frontend
+      x-cached: true
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: A list of application instances
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          description: The application name
+                        cluster_name:
+                          type: string
+                          description: The cluster name
+                        namespace:
+                          type: string
+                          description: The namespace containing the application
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  "/clients/{client_id}/clusters/{cluster_id}/applications/{internal_application_id}":
+    get:
+      summary: Retrieves detailed information about a specific internal application
+      tags:
+      - Internal Applications
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      - "$ref": "#/components/parameters/InternalApplicationId"
+      responses:
+        '200':
+          description: Detailed information about the application
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/InternalApplication"
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  "/clients/{client_id}/clusters/{cluster_id}/applications/{internal_application_id}/eol":
+    get:
+      summary: Determines if a specified application is at or near its end of life
+      tags:
+      - Internal Applications
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      responses:
+        '200':
+          description: End-of-life status of the application
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  "/clients/{client_id}/clusters/{cluster_id}/applications/{internal_application_id}/eos":
+    get:
+      summary: Determines if a specified application is at or near its end of support
+      tags:
+      - Internal Applications
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      responses:
+        '200':
+          description: End-of-support status of the application
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+  "/clients/{client_id}/clusters/{cluster_id}/applications/{internal_application_id}/versions":
+    put:
+      summary: Updates the version of an existing internal application
+      tags:
+      - Internal Applications
+      parameters:
+      - "$ref": "#/components/parameters/ClientId"
+      - "$ref": "#/components/parameters/ClusterId"
+      - "$ref": "#/components/parameters/ExternalApplicationId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/InternalApplicationVersion"
+      responses:
+        '200':
+          description: Application version updated successfully
+        '400':
+          "$ref": "#/components/responses/BadRequestError"
+        '401':
+          "$ref": "#/components/responses/UnauthorizedError"
+        '404':
+          "$ref": "#/components/responses/NotFoundError"
+        '500':
+          "$ref": "#/components/responses/InternalServerError"
+          
+  /clients/{client_id}/all_clusters/external_applications:
+    get:
+      tags:
+        - Frontend
+      summary: Retrieves a summary of all external applications across all clusters associated with a specific client.
+      description: This endpoint fetches a comprehensive list of all external applications installed across all clusters associated with a specific client. It summarizes the range of current versions installed and provides the latest version available from the external server.
+      operationId: getAllExternalApplicationsForClient
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique identifier for a client.
+      responses:
+        '200':
+          description: A comprehensive list of all external applications for the specified client.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  external_applications:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "Ingress-Nginx"
+                        current_version:
+                          type: string
+                          example: "0.33.0-0.34.0"
+                        external_version:
+                          type: string
+                          example: "0.35.0"
+              example:
+                external_applications:
+                  - name: "argocd"
+                    current_version: "2.1.0-v2.1.4"
+                    external_version: "2.2.0"
+                  - name: "spot-operator"
+                    current_version: "1.2.1"
+                    external_version: "1.3.0"
+                  - name: "kube-prometheus"
+                    current_version: "2.4.5-v3.4.7"
+                    external_version: "3.5.1"
+                  - name: "keda"
+                    current_version: "1.4.1-v1.4.3"
+                    external_version: "1.5.3"
+                  - name: "external-dns"
+                    current_version: "0.2.9-v0.2.11"
+                    external_version: "1.6.3"
+                  - name: "external-secrets"
+                    current_version: "1.2.2"
+                    external_version: "1.67.0"
+                  - name: "calico"
+                    current_version: "1.2.1"
+                    external_version: "2.1.0"
+                  - name: "grafana"
+                    current_version: "34.0.7-v34.0.9"
+                    external_version: "44.2.0"
+                  - name: "crowdstrike"
+                    current_version: "1.0.1"
+                    external_version: "1.3.0"
+                  - name: "vpc-cni"
+                    current_version: "0.2.1"
+                    external_version: "0.3.0"
+        '404':
+          description: No external applications found for the specified client.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No external applications found for the specified client."

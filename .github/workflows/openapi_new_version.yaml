@@ -1,0 +1,66 @@
+name: OpenAPI new version
+description: This GHA runs whenever a new version of the API is released.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/openapi.yaml'
+
+permissions:
+  contents: write
+
+jobs:
+  release-version:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+# openapi to postman
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install openapi2postmanv2
+      run: npm install -g openapi-to-postmanv2
+
+    - name: Find OpenAPI file
+      run: |
+        path=$(dirname $(find . -name 'openapi.yaml'))
+        echo "PATH_TO_OPENAPI_FILE=$path" >> $GITHUB_ENV
+
+    - name: Convert OpenAPI to Postman
+      run: |
+        openapi2postmanv2 -s ${{ env.PATH_TO_OPENAPI_FILE }}/openapi.yaml -o ${{ env.PATH_TO_OPENAPI_FILE }}/postman/collection.json -p -O folderStrategy=Tags
+
+    - name: Configure git and push
+      run: |
+        git config --global user.email "action@github.com"
+        git config --global user.name "GitHub Action"
+        git add -A
+        git commit -m "Update Postman Collection" --allow-empty
+        git push
+
+# Release
+
+    - name: Install Standard-Version
+      run: npm install -g standard-version
+
+    - name: Run standard-version
+      run: standard-version --infile ${{ env.PATH_TO_OPENAPI_FILE }}/CHANGELOG.md --outfile ${{ env.PATH_TO_OPENAPI_FILE }}/CHANGELOG.md --tag-prefix "api-"
+
+    - id: create-tag
+      run: |
+        git push --follow-tags origin main
+        echo "git-tag=$(git describe --abbrev=0 --tags)" >> $GITHUB_OUTPUT
+
+    - uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.create-tag.outputs.git-tag }}
+        bodyFile: "${{ env.PATH_TO_OPENAPI_FILE }}/CHANGELOG.md"
