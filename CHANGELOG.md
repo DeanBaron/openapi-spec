@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 1.1.0 (2025-03-01)
+
+
+### Features
+
+* initial commit of new openapi repository ([a44e515](https://github.com/DeanBaron/openapi-spec/commit/a44e515c603c1cc79ab13fd7289ffc1ac456ceba))
+
 ## [1.2.0](https://github.com/DeanBaron/architecture/compare/api-1.1.0...api-1.2.0) (2025-03-01)
 
 
